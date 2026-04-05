@@ -14,8 +14,8 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  // AJUSTE: O app agora deve focar na raiz (index) inicialmente
+  initialRouteName: 'index',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -27,7 +27,6 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -51,7 +50,13 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
+        {/* AJUSTE 1: Registrar a tela de LOGIN (index.tsx) */}
+        {/* headerShown: false remove a barra de título "index" do topo do app */}
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+
+        {/* AJUSTE 2: Garantir que o grupo de ABAS também não tenha cabeçalho nativo */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
