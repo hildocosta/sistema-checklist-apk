@@ -48,7 +48,7 @@ export default function LoginPage() {
 
   return (
     <ImageBackground 
-      source={require("../assets/images/background-apk.png")} // Sua imagem de fundo tecnológica
+      source={require("../assets/images/background-apk.png")}
       style={styles.backgroundContainer}
       resizeMode="cover"
     >
@@ -80,7 +80,6 @@ export default function LoginPage() {
                 <Text style={styles.subtitle}>Entre com seu e-mail e senha para continuar</Text>
               </View>
 
-              {/* Espaço fixo para o erro (evita que a tela pule/estique) */}
               <View style={styles.errorWrapper}>
                 {error ? (
                   <View style={styles.errorBox}>
@@ -135,9 +134,10 @@ export default function LoginPage() {
                   )}
                 </TouchableOpacity>
 
+                {/* BOTÃO DE REGISTRO COM NAVEGAÇÃO */}
                 <View style={styles.registerContainer}>
                   <Text style={styles.noAccountText}>Não tem uma conta? </Text>
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => router.push("/register")}>
                     <Text style={styles.registerText}>Cadastre-se</Text>
                   </TouchableOpacity>
                 </View>
@@ -145,7 +145,7 @@ export default function LoginPage() {
             </View>
           </View>
 
-          
+        
         </ScrollView>
       </KeyboardAvoidingView>
     </ImageBackground>
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     textAlign: "center" 
   },
   errorWrapper: {
-    height: 45, // Reserva o espaço para o erro não empurrar os campos
+    height: 45,
     justifyContent: "center",
     marginVertical: 5,
   },

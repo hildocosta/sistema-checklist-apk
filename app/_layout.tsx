@@ -8,17 +8,12 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  // AJUSTE: O app agora deve focar na raiz (index) inicialmente
   initialRouteName: 'index',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -50,11 +45,13 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        {/* AJUSTE 1: Registrar a tela de LOGIN (index.tsx) */}
-        {/* headerShown: false remove a barra de título "index" do topo do app */}
+        {/* LOGIN: Sem barra superior */}
         <Stack.Screen name="index" options={{ headerShown: false }} />
 
-        {/* AJUSTE 2: Garantir que o grupo de ABAS também não tenha cabeçalho nativo */}
+        {/* REGISTRO: Adicionado aqui para remover a barra "register/index" */}
+        <Stack.Screen name="register/index" options={{ headerShown: false }} />
+
+        {/* GRUPO DE ABAS: Sem barra superior nativa do Stack */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
