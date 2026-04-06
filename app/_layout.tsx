@@ -1,19 +1,23 @@
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
 export { ErrorBoundary } from 'expo-router';
 
+// CONFIGURAÇÃO SÊNIOR: O App agora tenta iniciar pela rota 'splash'
 export const unstable_settings = {
-  initialRouteName: 'index',
+  initialRouteName: 'splash',
 };
 
+// Mantém a Splash Nativa (app.json) até chamarmos o hide
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -28,6 +32,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
+      // Escondemos a splash nativa assim que o JS carregou. 
+      // A partir daqui, a sua tela 'app/splash.tsx' assume o controle visual.
       SplashScreen.hideAsync();
     }
   }, [loaded]);
@@ -44,17 +50,33 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        {/* LOGIN: Sem barra superior */}
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+      {/* StatusBar clara para o fundo azul escuro do 17BPM */}
+      <StatusBar style="light" />
 
-        {/* REGISTRO: Adicionado aqui para remover a barra "register/index" */}
-        <Stack.Screen name="register/index" options={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        {/* NOVA TELA DE SPLASH ANIMADA */}
+        <Stack.Screen name="splash" />
 
-        {/* GRUPO DE ABAS: Sem barra superior nativa do Stack */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        {/* LOGIN (index) */}
+        <Stack.Screen name="index" />
+
+        {/* REGISTRO */}
+        <Stack.Screen name="register/index" />
+
+        {/* ESQUECI A SENHA */}
+        <Stack.Screen name="forgot-password/index" />
+
+        {/* GRUPO DE ABAS INTERNAS */}
+        <Stack.Screen name="(tabs)" />
         
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        {/* MODAIS (Configuração nativa iOS/Android) */}
+        <Stack.Screen 
+          name="modal" 
+          options={{ 
+            presentation: 'modal',
+            headerShown: Platform.OS === 'ios'
+          }} 
+        />
       </Stack>
     </ThemeProvider>
   );

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "frontend-mobile-apk",
+    "name": "17º BPM - Sistema",
     "slug": "frontend-mobile-apk",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,16 +11,18 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0f172a"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pmpr.17bpm.sistema"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0f172a"
       },
+      "package": "com.pmpr.17bpm.sistema",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
