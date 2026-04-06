@@ -3,25 +3,26 @@ import {
   StyleSheet, 
   View, 
   Text, 
-  TextInput, 
-  TouchableOpacity, 
   Image, 
   ImageBackground,
   KeyboardAvoidingView, 
   Platform, 
   ScrollView,
-  ActivityIndicator,
+  TouchableOpacity,
   Alert 
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react-native"; 
+import { ArrowLeft } from "lucide-react-native"; 
 import { StatusBar } from "expo-status-bar";
+
+// Componentes Customizados
+import { PrimaryButton } from "../../components/PrimaryButton"; 
+import { CustomInput } from "../../components/CustomInput";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -43,7 +44,6 @@ export default function RegisterPage() {
     }
 
     try {
-      // Simulação de sucesso
       setTimeout(() => {
         setIsLoading(false);
         Alert.alert("Sucesso", "CONTA CRIADA COM SUCESSO!", [
@@ -76,7 +76,6 @@ export default function RegisterPage() {
         >
           <View style={styles.cardContainer}>
             
-            {/* Header Azul Compacto (70px) - IDÊNTICO AO LOGIN */}
             <View style={styles.headerBlue}>
               <Image 
                 source={require("../../assets/images/bg-profile.png")} 
@@ -85,7 +84,6 @@ export default function RegisterPage() {
               />
             </View>
 
-            {/* Card Branco Compacto */}
             <View style={styles.card}>
               <View style={styles.textHeader}>
                 <Text style={styles.title}>Nova Conta</Text>
@@ -101,55 +99,40 @@ export default function RegisterPage() {
               </View>
 
               <View style={styles.form}>
-                <Text style={styles.label}>NOME COMPLETO</Text>
-                <TextInput 
-                  style={styles.input}
+                <CustomInput 
+                  label="NOME COMPLETO"
                   placeholder="Ex: Cb. Silva"
-                  placeholderTextColor="#94a3b8"
                   value={name}
                   onChangeText={setName}
                 />
 
-                <Text style={styles.label}>E-MAIL</Text>
-                <TextInput 
-                  style={styles.input}
+                <CustomInput 
+                  label="E-MAIL"
                   placeholder="E-mail institucional..."
-                  placeholderTextColor="#94a3b8"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
 
-                <Text style={styles.label}>SENHA</Text>
-                <View style={styles.passwordWrapper}>
-                  <TextInput 
-                    style={styles.inputInside}
+                <View style={{ marginBottom: 10 }}> 
+                  <CustomInput 
+                    label="SENHA"
                     placeholder="Crie uma senha..."
-                    placeholderTextColor="#94a3b8"
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
+                    isPassword
                   />
-                  <TouchableOpacity 
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    {showPassword ? <EyeOff size={18} color="#64748b" /> : <Eye size={18} color="#64748b" />}
-                  </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity 
-                  style={[styles.buttonMain, isLoading && styles.buttonDisabled]} 
-                  onPress={handleRegister} 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.buttonText}>CRIAR MINHA CONTA</Text>
-                  )}
-                </TouchableOpacity>
+                <PrimaryButton 
+                  title="CRIAR MINHA CONTA"
+                  onPress={handleRegister}
+                  isLoading={isLoading}
+                />
+
+                
+                <View style={styles.divider} />
 
                 <TouchableOpacity 
                   onPress={() => router.back()}
@@ -179,13 +162,13 @@ const styles = StyleSheet.create({
   },
   headerBlue: {
     backgroundColor: "#3b82f6",
-    height: 70, // Reduzido para 70px
+    height: 70,
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     justifyContent: "center",
     alignItems: "center",
   },
-  logoImage: { width: 50, height: 50 }, // Reduzido para 50px
+  logoImage: { width: 50, height: 50 },
   card: {
     backgroundColor: "#fff",
     borderBottomLeftRadius: 15,
@@ -208,44 +191,20 @@ const styles = StyleSheet.create({
   },
   errorText: { color: "#b91c1c", fontSize: 10, fontWeight: "bold", textAlign: "center" },
   form: { width: "100%" },
-  label: { fontSize: 10, fontWeight: "bold", color: "#475569", marginBottom: 4, marginLeft: 2 },
-  input: {
-    height: 45, // Ajustado para 45px
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    fontSize: 14,
-    color: "#1e293b",
-    backgroundColor: "#f8fafc"
+  
+ 
+  divider: {
+    height: 1,
+    backgroundColor: "#e2e8f0",
+    width: "100%",
+    marginVertical: 20,
   },
-  passwordWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 10,
-    height: 45, // Ajustado para 45px
-    backgroundColor: "#f8fafc",
-    marginBottom: 20,
-  },
-  inputInside: { flex: 1, paddingHorizontal: 12, fontSize: 14, color: "#1e293b" },
-  eyeIcon: { paddingHorizontal: 12 },
-  buttonMain: {
-    backgroundColor: "#3b82f6",
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonDisabled: { backgroundColor: "#94a3b8" },
-  buttonText: { color: "#fff", fontSize: 13, fontWeight: "bold" },
+
   backButton: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+   
   },
   backButtonText: { color: "#3b82f6", fontWeight: "bold", fontSize: 12 },
 });

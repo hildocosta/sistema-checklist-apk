@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { 
-  StyleSheet, View, Text, TextInput, TouchableOpacity, 
-  Image, ImageBackground, KeyboardAvoidingView, Platform, 
-  ScrollView, ActivityIndicator 
+  StyleSheet, View, Text, Image, ImageBackground, 
+  KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity 
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { ArrowLeft } from "lucide-react-native"; 
 import { StatusBar } from "expo-status-bar";
+
+// Componentes Customizados
+import { PrimaryButton } from "../../components/PrimaryButton"; 
+import { CustomInput } from "../../components/CustomInput";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -50,7 +53,6 @@ export default function ForgotPasswordPage() {
         >
           <View style={styles.cardContainer}>
             
-            {/* Header Azul Compacto (70px) - PADRÃO LOGIN */}
             <View style={styles.headerBlue}>
               <Image 
                 source={require("../../assets/images/bg-profile.png")} 
@@ -77,28 +79,25 @@ export default function ForgotPasswordPage() {
                   </View>
 
                   <View style={styles.form}>
-                    <Text style={styles.label}>E-MAIL</Text>
-                    <TextInput 
-                      style={styles.input}
+                    <CustomInput 
+                      label="E-MAIL"
                       placeholder="Digite seu e-mail..."
-                      placeholderTextColor="#94a3b8"
                       value={email}
                       onChangeText={setEmail}
                       keyboardType="email-address"
                       autoCapitalize="none"
                     />
 
-                    <TouchableOpacity 
-                      style={[styles.buttonMain, isLoading && styles.buttonDisabled]} 
-                      onPress={handleResetRequest} 
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <ActivityIndicator color="#fff" />
-                      ) : (
-                        <Text style={styles.buttonText}>ENVIAR INSTRUÇÕES</Text>
-                      )}
-                    </TouchableOpacity>
+                    <View style={{ marginTop: 10 }}>
+                      <PrimaryButton 
+                        title="ENVIAR INSTRUÇÕES"
+                        onPress={handleResetRequest}
+                        isLoading={isLoading}
+                      />
+                    </View>
+
+                    
+                    <View style={styles.divider} />
 
                     <TouchableOpacity 
                       onPress={() => router.back()}
@@ -110,7 +109,7 @@ export default function ForgotPasswordPage() {
                   </View>
                 </View>
               ) : (
-                /* ESTADO 2: SUCESSO (Mantendo o padrão compacto) */
+                /* ESTADO 2: SUCESSO */
                 <View style={styles.successContainer}>
                   <View style={styles.textHeader}>
                     <Text style={[styles.title, { color: '#22c55e' }]}>Link Enviado!</Text>
@@ -122,12 +121,13 @@ export default function ForgotPasswordPage() {
                     <Text style={styles.infoBoxText}>Não recebeu? Verifique sua pasta de Spam ou aguarde 5 minutos.</Text>
                   </View>
 
-                  <TouchableOpacity 
-                    style={styles.buttonMain} 
+                  <PrimaryButton 
+                    title="VOLTAR PARA O LOGIN"
                     onPress={() => router.replace("/")}
-                  >
-                    <Text style={styles.buttonText}>VOLTAR PARA O LOGIN</Text>
-                  </TouchableOpacity>
+                  />
+
+                  
+                  <View style={styles.divider} />
 
                   <TouchableOpacity 
                     onPress={() => setIsSubmitted(false)}
@@ -139,8 +139,6 @@ export default function ForgotPasswordPage() {
               )}
             </View>
           </View>
-
-                    
         </ScrollView>
       </KeyboardAvoidingView>
     </ImageBackground>
@@ -178,7 +176,6 @@ const styles = StyleSheet.create({
   textHeader: { alignItems: "center", marginBottom: 10 },
   title: { fontSize: 18, fontWeight: "bold", color: "#1e293b" },
   subtitle: { fontSize: 11, color: "#64748b", textAlign: 'center', marginTop: 2 },
-  
   errorWrapper: { height: 40, justifyContent: "center" },
   errorBox: {
     backgroundColor: "#fef2f2",
@@ -188,41 +185,23 @@ const styles = StyleSheet.create({
     borderColor: "#fecaca",
   },
   errorText: { color: "#b91c1c", fontSize: 10, fontWeight: "bold", textAlign: "center" },
-
   form: { width: "100%" },
-  label: { fontSize: 10, fontWeight: "bold", color: "#475569", marginBottom: 4, marginLeft: 2 },
-  input: {
-    height: 45,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginBottom: 15,
-    fontSize: 14,
-    color: "#1e293b",
-    backgroundColor: "#f8fafc"
-  },
-  buttonMain: {
-    backgroundColor: "#3b82f6",
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    width: '100%'
-  },
-  buttonDisabled: { backgroundColor: "#94a3b8" },
-  buttonText: { color: "#fff", fontSize: 13, fontWeight: "bold" },
   
+  
+  divider: {
+    height: 1,
+    backgroundColor: "#e2e8f0",
+    width: "100%",
+    marginVertical: 20,
+  },
+
   backButton: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
   },
   backButtonText: { color: "#3b82f6", fontWeight: "bold", fontSize: 12 },
-
-  /* Estilos do Sucesso */
-  successContainer: { alignItems: 'center', paddingTop: 10 },
+  successContainer: { alignItems: 'center', paddingTop: 10, width: '100%' },
   emailHighlight: { color: '#1e293b', fontWeight: 'bold', fontSize: 12, marginTop: 5 },
   infoBox: {
     backgroundColor: '#f8fafc',
@@ -234,9 +213,8 @@ const styles = StyleSheet.create({
     marginVertical: 20
   },
   infoBoxText: { fontSize: 10, color: '#94a3b8', textAlign: 'center', lineHeight: 14 },
-  tryAgainBtn: { marginTop: 20 },
+  tryAgainBtn: { 
+    
+  },
   tryAgainText: { fontSize: 11, fontWeight: 'bold', color: '#94a3b8', letterSpacing: 0.5 },
-
-  footerBrand: { marginTop: 25, alignItems: 'center' },
-  footerBrandText: { color: '#94a3b8', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 }
 });

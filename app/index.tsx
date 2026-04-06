@@ -3,23 +3,23 @@ import {
   StyleSheet, 
   View, 
   Text, 
-  TextInput, 
-  TouchableOpacity, 
   Image, 
   ImageBackground,
   KeyboardAvoidingView, 
   Platform, 
   ScrollView,
-  ActivityIndicator 
+  TouchableOpacity
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
-import { Eye, EyeOff } from "lucide-react-native"; 
 import { StatusBar } from "expo-status-bar";
+
+// Componentes Customizados
+import { PrimaryButton } from "../components/PrimaryButton"; 
+import { CustomInput } from "../components/CustomInput";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -65,7 +65,6 @@ export default function LoginPage() {
         >
           <View style={styles.cardContainer}>
             
-            {/* Header Azul Compacto (70px) */}
             <View style={styles.headerBlue}>
               <Image 
                 source={require("../assets/images/bg-profile.png")} 
@@ -74,7 +73,6 @@ export default function LoginPage() {
               />
             </View>
 
-            {/* Card de Formulário */}
             <View style={styles.card}>
               <View style={styles.textHeader}>
                 <Text style={styles.title}>Acessar Sistema</Text>
@@ -90,36 +88,23 @@ export default function LoginPage() {
               </View>
 
               <View style={styles.form}>
-                <Text style={styles.label}>E-MAIL</Text>
-                <TextInput 
-                  style={styles.input}
+                <CustomInput 
+                  label="E-MAIL"
                   placeholder="Digite seu e-mail..."
-                  placeholderTextColor="#94a3b8"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
 
-                <Text style={styles.label}>SENHA</Text>
-                <View style={styles.passwordWrapper}>
-                  <TextInput 
-                    style={styles.inputInside}
-                    placeholder="Digite sua senha..."
-                    placeholderTextColor="#94a3b8"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity 
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    {showPassword ? <EyeOff size={18} color="#64748b" /> : <Eye size={18} color="#64748b" />}
-                  </TouchableOpacity>
-                </View>
+                <CustomInput 
+                  label="SENHA"
+                  placeholder="Digite sua senha..."
+                  value={password}
+                  onChangeText={setPassword}
+                  isPassword
+                />
 
-                {/* NAVEGAÇÃO PARA ESQUECEU SENHA */}
                 <TouchableOpacity 
                   style={styles.forgotBtn}
                   onPress={() => router.push("/forgot-password")}
@@ -127,17 +112,14 @@ export default function LoginPage() {
                   <Text style={styles.forgotText}>Esqueceu sua senha?</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={[styles.buttonMain, isLoading && styles.buttonDisabled]} 
-                  onPress={handleLogin} 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.buttonText}>ENTRAR NO SISTEMA</Text>
-                  )}
-                </TouchableOpacity>
+                <PrimaryButton 
+                  title="ENTRAR NO SISTEMA"
+                  onPress={handleLogin}
+                  isLoading={isLoading}
+                />
+
+                
+                <View style={styles.divider} />
 
                 <View style={styles.registerContainer}>
                   <Text style={styles.noAccountText}>Não tem uma conta? </Text>
@@ -195,41 +177,22 @@ const styles = StyleSheet.create({
   },
   errorText: { color: "#b91c1c", fontSize: 10, fontWeight: "bold", textAlign: "center" },
   form: { width: "100%" },
-  label: { fontSize: 10, fontWeight: "bold", color: "#475569", marginBottom: 4, marginLeft: 2 },
-  input: {
-    height: 45,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    fontSize: 14,
-    color: "#1e293b",
-    backgroundColor: "#f8fafc"
-  },
-  passwordWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 10,
-    height: 45,
-    backgroundColor: "#f8fafc",
-  },
-  inputInside: { flex: 1, paddingHorizontal: 12, fontSize: 14, color: "#1e293b" },
-  eyeIcon: { paddingHorizontal: 12 },
-  forgotBtn: { alignSelf: "flex-end", marginVertical: 12 },
+  forgotBtn: { alignSelf: "flex-end", marginBottom: 20 },
   forgotText: { color: "#3b82f6", fontWeight: "bold", fontSize: 11 },
-  buttonMain: {
-    backgroundColor: "#3b82f6",
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
+  
+  
+  divider: {
+    height: 1,
+    backgroundColor: "#e2e8f0",
+    width: "100%",
+    marginVertical: 20,
   },
-  buttonDisabled: { backgroundColor: "#94a3b8" },
-  buttonText: { color: "#fff", fontSize: 13, fontWeight: "bold" },
-  registerContainer: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
+
+  registerContainer: { 
+    flexDirection: "row", 
+    justifyContent: "center",
+    
+  },
   noAccountText: { color: "#64748b", fontSize: 12 },
   registerText: { color: "#3b82f6", fontWeight: "bold", fontSize: 12 },
 });
