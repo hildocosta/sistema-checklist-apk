@@ -12,10 +12,7 @@ import {
 import { useRouter, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-// Importação dos estilos separados
 import { styles } from "./styles"; 
-
-// Componentes Customizados
 import { PrimaryButton } from "../components/PrimaryButton"; 
 import { CustomInput } from "../components/CustomInput";
 
@@ -26,25 +23,34 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // DADOS SIMULADOS PARA TESTE
+  const MOCK_USER = {
+    email: "admin@pm.pr.gov.br",
+    password: "123"
+  };
+
   const handleLogin = async () => {
     setIsLoading(true);
     setError("");
     
-    try {
+    // Simula um delay de rede de 1.2 segundos
+    setTimeout(() => {
       if (email === "" || password === "") {
-        setError("E-MAIL OU SENHA INVÁLIDOS.");
+        setError("POR FAVOR, PREENCHA TODOS OS CAMPOS.");
         setIsLoading(false);
         return;
       }
-      
-      setTimeout(() => {
+
+      // Validação simulada
+      if (email === MOCK_USER.email && password === MOCK_USER.password) {
         setIsLoading(false);
+        // Sucesso: Vai para as Tabs e limpa o histórico de navegação
         router.replace("/(tabs)");
-      }, 1500);
-    } catch (err) {
-      setError("ERRO DE CONEXÃO COM O SERVIDOR.");
-      setIsLoading(false);
-    }
+      } else {
+        setError("E-MAIL OU SENHA INCORRETOS.");
+        setIsLoading(false);
+      }
+    }, 1200);
   };
 
   return (
@@ -77,7 +83,7 @@ export default function LoginPage() {
             <View style={styles.card}>
               <View style={styles.textHeader}>
                 <Text style={styles.title}>Acessar Sistema</Text>
-                <Text style={styles.subtitle}>Identifique-se para continuar</Text>
+                <Text style={styles.subtitle}>17º Batalhão de Polícia Militar</Text>
               </View>
 
               <View style={styles.errorWrapper}>
@@ -91,7 +97,7 @@ export default function LoginPage() {
               <View style={styles.form}>
                 <CustomInput 
                   label="E-MAIL"
-                  placeholder="Digite seu e-mail..."
+                  placeholder="admin@pm.pr.gov.br"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -100,7 +106,7 @@ export default function LoginPage() {
 
                 <CustomInput 
                   label="SENHA"
-                  placeholder="Digite sua senha..."
+                  placeholder="Sua senha..."
                   value={password}
                   onChangeText={setPassword}
                   isPassword
@@ -114,7 +120,7 @@ export default function LoginPage() {
                 </TouchableOpacity>
 
                 <PrimaryButton 
-                  title="ENTRAR NO SISTEMA"
+                  title={isLoading ? "AUTENTICANDO..." : "ENTRAR NO SISTEMA"}
                   onPress={handleLogin}
                   isLoading={isLoading}
                 />

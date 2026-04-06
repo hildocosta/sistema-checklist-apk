@@ -1,57 +1,75 @@
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+import { Tabs } from 'expo-router';
+import { DrawerActions } from '@react-navigation/native';
+import { useNavigation } from 'expo-router';
+import { LayoutDashboard, ShieldAlert, Menu } from 'lucide-react-native';
+import { TouchableOpacity, Platform } from 'react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const navigation = useNavigation();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: true,
+        // CENTRALIZAÇÃO REAL AQUI
+        headerTitleAlign: 'center', 
+        
+        headerStyle: { 
+          backgroundColor: '#020617',
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTitleStyle: { 
+          color: '#fff', 
+          fontWeight: 'bold',
+          fontSize: 18,
+        },
+        headerTintColor: '#3b82f6',
+
+        headerLeftContainerStyle: {
+          paddingLeft: 15,
+        },
+        
+        // Removemos o headerTitleContainerStyle antigo para não dar conflito
+        
+        headerLeft: () => (
+          <TouchableOpacity 
+            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            activeOpacity={0.7}
+          >
+            <Menu size={28} color="#fff" />
+          </TouchableOpacity>
+        ),
+
+        // Adicionamos um elemento vazio à direita para equilibrar o peso visual
+        // Isso garante que o título fique matematicamente no centro da tela
+        headerRight: () => <TouchableOpacity style={{ marginRight: 15, width: 28 }} />,
+
+        tabBarStyle: {
+          backgroundColor: '#020617',
+          borderTopColor: '#1e293b',
+          height: 70,
+          paddingBottom: 12,
+        },
+        tabBarActiveTintColor: '#3b82f6',
       }}>
+      
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          title: '17º BPM',
+          tabBarLabel: 'Início',
+          tabBarIcon: ({ color }) => <LayoutDashboard size={24} color={color} />,
         }}
       />
+
       <Tabs.Screen
         name="two"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'SERVIÇO',
+          tabBarLabel: 'Ocorrências',
+          tabBarIcon: ({ color }) => <ShieldAlert size={24} color={color} />,
         }}
       />
     </Tabs>
