@@ -6,51 +6,34 @@ import {
 } from "react-native";
 import { ChevronRight, Search, CheckCircle2, Check } from 'lucide-react-native';
 
-// Importação dos dados oficiais
-import { ACESSORIOSADE } from "../constants/data/acessoriosade";
-import { ARMAS } from "../constants/data/armamentos";
-
-interface InventarioItem {
-  id: number;
-  cat: string;
-  desc: string;
-  serie: string;
-  qtd: number;
-  pmpr?: string;
-  status: "ok" | "pendente";
-  cautela?: string;
-  pagLivro?: string;
-}
+// Importação centralizada (Otimização de Sênior)
+import { DATABASE_INICIAL, InventarioItem } from "../constants/data";
 
 export default function ChecklistRefinado() {
-  // Inicializa o estado com a união dos armamentos e acessórios
-  const [items, setItems] = useState<InventarioItem[]>(() => [
-    ...(ARMAS as InventarioItem[]),
-    ...(ACESSORIOSADE as InventarioItem[])
-  ]);
-
-  const [abaAtiva, setAbaAtiva] = useState("armamento"); // "armamento" é o cat do seu novo arquivo
+  // Estado inicial limpo usando a Database consolidada
+  const [items, setItems] = useState<InventarioItem[]>(DATABASE_INICIAL);
+  const [abaAtiva, setAbaAtiva] = useState("armamento"); 
   const [filtroTexto, setFiltroTexto] = useState("");
   
-  // Estados para animação suave
   const [itemSaindo, setItemSaindo] = useState<number | null>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  // Lógica de Progresso Geral
+  // Lógica de Progresso
   const totalGeral = items.length;
   const concluidosGeral = items.filter(i => i.status === "ok").length;
   const progresso = totalGeral > 0 ? Math.round((concluidosGeral / totalGeral) * 100) : 0;
 
-  // Categorias disponíveis no sistema
-  const categorias = ["armamento", "munições", "taser", "equip", "rádios", "vtr", "sade", "acess sade"];
+  // Lista de categorias para as abas
+  const categorias = ["armamento", "comunicacao", "equipamento", "municao", "sade", "acess sade", "taser", "veiculo"];
 
   const getContagem = (cat: string) => {
-    const total = items.filter(i => i.cat === cat).length;
-    const pendentes = items.filter(i => i.cat === cat && i.status === "pendente").length;
-    return { total, pendentes };
+    const subset = items.filter(i => i.cat === cat);
+    return {
+      total: subset.length,
+      pendentes: subset.filter(i => i.status === "pendente").length
+    };
   };
 
-  // Filtro inteligente (Busca por Descrição, Série ou PMPR)
   const itensFiltrados = useMemo(() => {
     return items.filter(i =>
       i.cat === abaAtiva &&
@@ -65,12 +48,10 @@ export default function ChecklistRefinado() {
 
   const handleCheck = (id: number) => {
     setItemSaindo(id);
-
-    // Animação de 800ms conforme solicitado para o padrão "Sênior"
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 800, 
-      easing: Easing.out(Easing.poly(4)),
+      duration: 500, 
+      easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start(() => {
       setItems(prev => prev.map(i => i.id === id ? { ...i, status: "ok" } : i));
@@ -83,39 +64,55 @@ export default function ChecklistRefinado() {
     setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
   };
 
+  // Helper para nomes amigáveis nas abas
+  const getLabel = (cat: string) => {
+    const labels: Record<string, string> = {
+      armamento: "ARMAMENTO",
+      comunicacao: "RÁDIOS",
+      equipamento: "EQUIPAMENTOS",
+      municao: "MUNIÇÕES",
+      sade: "SADE (CEL)",
+      "acess sade": "ACESSÓRIOS",
+      taser: "TASER 10",
+      veiculo: "VIATURAS"
+    };
+    return labels[cat] || cat.toUpperCase();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* HEADER COM PROGRESSO */}
+      {/* HEADER E BARRA DE PROGRESSO */}
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>CARGA 17º BPM</Text>
           <Text style={styles.headerSubtitle}>Conferência de Material</Text>
         </View>
         <View style={styles.progressCircle}>
-            <Text style={styles.progressValue}>{progresso}%</Text>
+          <Text style={styles.progressValue}>{progresso}%</Text>
         </View>
       </View>
 
       <View style={styles.statsRow}>
-         <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: `${progresso}%` }]} />
-         </View>
-         <Text style={styles.statsText}>{concluidosGeral} DE {totalGeral} ITENS CONCLUÍDOS</Text>
+        <View style={styles.progressBarBg}>
+          <Animated.View style={[styles.progressBarFill, { width: `${progresso}%` }]} />
+        </View>
+        <Text style={styles.statsText}>{concluidosGeral} DE {totalGeral} ITENS CONCLUÍDOS</Text>
       </View>
 
-      {/* SELEÇÃO DE CATEGORIAS E BUSCA */}
+      {/* TABS */}
       <View style={styles.filterSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
           {categorias.map(cat => {
             const { total, pendentes } = getContagem(cat);
-            if (total === 0) return null; // Não mostra categoria vazia
+            if (total === 0) return null;
             const ativo = abaAtiva === cat;
+
             return (
               <TouchableOpacity key={cat} onPress={() => setAbaAtiva(cat)} style={[styles.tab, ativo && styles.tabActive]}>
                 <Text style={[styles.tabText, ativo && styles.tabTextActive]}>
-                  {cat.toUpperCase()} {pendentes > 0 ? `(${pendentes})` : '✓'}
+                  {getLabel(cat)} {pendentes > 0 ? `(${pendentes})` : '✓'}
                 </Text>
               </TouchableOpacity>
             );
@@ -134,38 +131,34 @@ export default function ChecklistRefinado() {
         </View>
       </View>
 
-      {/* LISTAGEM DE ITENS */}
+      {/* LISTA DINÂMICA */}
       <FlatList
         data={itensFiltrados}
         keyExtractor={item => `${item.cat}-${item.id}`}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => {
           const isFinalizando = itemSaindo === item.id;
-
           return (
             <Animated.View style={[
               styles.card, 
-              isFinalizando && { 
-                opacity: fadeAnim, 
-                transform: [
-                    { scale: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) },
-                    { translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }
-                ] 
-              }
+              isFinalizando && { opacity: fadeAnim, transform: [{ scale: fadeAnim }] }
             ]}>
               <View style={styles.cardMainRow}>
                 <View style={styles.cardContent}>
                   <View style={styles.badgeRow}>
                     <View style={styles.qtdBadge}><Text style={styles.qtdText}>{item.qtd} UN</Text></View>
-                    {item.pmpr && <Text style={styles.pmprText}>PMPR: {item.pmpr}</Text>}
-                    <Text style={styles.serieText}>SN: {item.serie}</Text>
+                    {item.pmpr && item.pmpr !== "----" && (
+                      <Text style={styles.pmprText}>{item.cat === 'veiculo' ? 'VTR' : 'PMPR'}: {item.pmpr}</Text>
+                    )}
+                    {item.serie && item.serie !== "----" && (
+                      <Text style={styles.serieText}>SN: {item.serie}</Text>
+                    )}
                   </View>
-                  <Text style={styles.itemDesc} numberOfLines={3}>{item.desc}</Text>
+                  <Text style={styles.itemDesc}>{item.desc}</Text>
                 </View>
 
                 <TouchableOpacity 
                   disabled={isFinalizando}
-                  activeOpacity={0.7}
                   style={[styles.actionButton, isFinalizando && styles.actionButtonSuccess]} 
                   onPress={() => handleCheck(item.id)}
                 >
@@ -193,53 +186,47 @@ export default function ChecklistRefinado() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <CheckCircle2 size={48} color="#10b981" />
-            <Text style={styles.emptyText}>Tudo certo nesta categoria!</Text>
+            <Text style={styles.emptyText}>Categoria Concluída!</Text>
           </View>
         }
       />
 
-      {/* BOTÃO FLUTUANTE DE FINALIZAÇÃO */}
+      {/* FOOTER ACTION */}
       <View style={styles.footerAction}>
-         <TouchableOpacity 
+        <TouchableOpacity 
           style={[styles.sendButton, progresso < 100 && styles.sendButtonDisabled]}
-          onPress={() => Alert.alert("Finalizar", "Deseja enviar o relatório de conferência?")}
-         >
-            <Text style={styles.sendButtonText}>
-              {progresso === 100 ? "FINALIZAR RELATÓRIO" : `PENDENTE (${totalGeral - concluidosGeral})`}
-            </Text>
-         </TouchableOpacity>
+          onPress={() => Alert.alert("Finalizar", "Deseja enviar o relatório final?")}
+        >
+          <Text style={styles.sendButtonText}>
+            {progresso === 100 ? "FINALIZAR RELATÓRIO" : `PENDENTE (${totalGeral - concluidosGeral})`}
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
+// Estilos mantidos para consistência visual
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
-  header: { 
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10, backgroundColor: '#fff' 
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10, backgroundColor: '#fff' },
   headerTitle: { fontSize: 22, fontWeight: '900', color: '#0F172A' },
   headerSubtitle: { fontSize: 14, color: '#64748B', fontWeight: '500' },
   progressCircle: { width: 45, height: 45, borderRadius: 25, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#DBEAFE' },
   progressValue: { fontSize: 13, fontWeight: '800', color: '#3B82F6' },
-  
   statsRow: { paddingHorizontal: 20, backgroundColor: '#fff', paddingBottom: 15 },
   progressBarBg: { height: 6, backgroundColor: '#F1F5F9', borderRadius: 3, marginBottom: 8 },
   progressBarFill: { height: 6, backgroundColor: '#3B82F6', borderRadius: 3 },
   statsText: { fontSize: 10, fontWeight: '800', color: '#94A3B8', letterSpacing: 0.5 },
-
   filterSection: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
   tabsContainer: { paddingHorizontal: 15, paddingVertical: 12, gap: 10 },
   tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0' },
   tabActive: { backgroundColor: '#1E293B', borderColor: '#1E293B' },
   tabText: { fontSize: 12, fontWeight: '700', color: '#64748B' },
   tabTextActive: { color: '#fff' },
-
   searchContainer: { flexDirection: 'row', alignItems: 'center', margin: 15, marginTop: 5, backgroundColor: '#F1F5F9', borderRadius: 14, paddingHorizontal: 12 },
   searchIcon: { marginRight: 8 },
   searchInput: { flex: 1, height: 48, fontSize: 14, color: '#1E293B' },
-
   list: { padding: 15, paddingBottom: 140 },
   card: { 
     backgroundColor: '#fff', borderRadius: 24, padding: 16, marginBottom: 15,
@@ -256,21 +243,14 @@ const styles = StyleSheet.create({
   serieText: { color: '#3B82F6', fontSize: 11, fontWeight: '700' },
   pmprText: { color: '#64748B', fontSize: 11, fontWeight: '700' },
   itemDesc: { fontSize: 15, fontWeight: '700', color: '#1E293B', lineHeight: 20 },
-  
-  actionButton: { 
-    width: 50, height: 50, borderRadius: 18, backgroundColor: '#F1F5F9', 
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2E8F0' 
-  },
+  actionButton: { width: 50, height: 50, borderRadius: 18, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
   actionButtonSuccess: { backgroundColor: '#10B981', borderColor: '#10B981' },
-
   cardFooter: { flexDirection: 'row', gap: 10, marginTop: 15, borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 15 },
   miniInput: { flex: 1, height: 40, backgroundColor: '#F8FAFC', borderRadius: 10, paddingHorizontal: 12, fontSize: 11, borderWidth: 1, borderColor: '#E2E8F0', color: '#1E293B' },
-
   footerAction: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: 'rgba(255,255,255,0.95)' },
-  sendButton: { height: 58, borderRadius: 20, backgroundColor: '#10B981', alignItems: 'center', justifyContent: 'center', elevation: 2 },
-  sendButtonDisabled: { backgroundColor: '#CBD5E1', elevation: 0 },
+  sendButton: { height: 58, borderRadius: 20, backgroundColor: '#10B981', alignItems: 'center', justifyContent: 'center' },
+  sendButtonDisabled: { backgroundColor: '#CBD5E1' },
   sendButtonText: { color: '#fff', fontWeight: '900', fontSize: 16, letterSpacing: 1 },
-
   emptyContainer: { alignItems: 'center', marginTop: 60 },
   emptyText: { marginTop: 12, color: '#64748B', fontWeight: '700', fontSize: 16 }
 });
