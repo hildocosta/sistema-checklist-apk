@@ -37,16 +37,13 @@ function CustomDrawerContent(props: any) {
   
   return (
     <View style={{ flex: 1, backgroundColor: '#020617' }}>
-      {/* Usamos o contentContainerStyle com flexGrow: 1 para permitir 
-          o uso de justifyContent: 'center' se quisermos centralizar tudo 
-      */}
       <DrawerContentScrollView 
         {...props} 
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 50 }}
       >
         <View style={styles.centralizer}>
           
-          {/* CABEÇALHO - Agora desce um pouco mais */}
+          {/* CABEÇALHO */}
           <View style={styles.drawerHeader}>
             <View style={styles.logoContainer}>
               <Image 
@@ -77,8 +74,8 @@ function CustomDrawerContent(props: any) {
             <DrawerItem
               label="CheckList"
               labelStyle={styles.drawerLabel}
-              icon={({ size }) => <ClipboardCheck size={size} color="#94a3b8" />}
-              onPress={() => console.log('Checklist')}
+              icon={({ size }) => <ClipboardCheck size={size} color="#3b82f6" />} // Cor azul para indicar ativo
+              onPress={() => router.push('/checklist')} // Rota vinculada ao arquivo checklist.tsx
               style={styles.drawerItemStyle}
             />
             
@@ -114,7 +111,7 @@ function CustomDrawerContent(props: any) {
               style={styles.drawerItemStyle}
             />
 
-            {/* BOTÃO SAIR - Subiu para perto das opções */}
+            {/* BOTÃO SAIR */}
             <TouchableOpacity 
               style={styles.logoutButtonInline} 
               onPress={() => router.replace('/')}
@@ -162,9 +159,23 @@ function RootLayoutNav() {
           overlayColor: 'rgba(0,0,0,0.6)',
         }}
       >
+        {/* Escondemos index e splash do menu lateral, mas mantemos as rotas */}
         <Drawer.Screen name="index" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
         <Drawer.Screen name="splash" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
+        
+        {/* Telas visíveis via DrawerItem (opcionalmente visíveis no Drawer nativo também) */}
         <Drawer.Screen name="(tabs)" options={{ title: 'Painel' }} />
+        
+        {/* Nova Tela de Checklist vinculada */}
+        <Drawer.Screen 
+          name="checklist" 
+          options={{ 
+            title: 'Conferência Digital',
+            headerShown: true, // Habilitado para ter botão de voltar ou menu
+            headerTintColor: '#fff',
+            headerStyle: { backgroundColor: '#020617' }
+          }} 
+        />
       </Drawer>
     </ThemeProvider>
   );
@@ -172,7 +183,6 @@ function RootLayoutNav() {
 
 const styles = StyleSheet.create({
   centralizer: {
-    // Esta View garante que o conteúdo não fique "colado" nem no topo nem no fundo
     justifyContent: 'center',
     flex: 1,
   },
@@ -202,7 +212,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   drawerItemStyle: {
-    marginVertical: -2, // Compacta levemente para centralizar melhor o bloco todo
+    marginVertical: -2,
   },
   drawerLabel: { 
     color: '#94a3b8', 
@@ -218,7 +228,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     alignItems: 'center', 
     gap: 10,
-    marginTop: 40, // Espaço maior para separar a navegação da ação de saída
+    marginTop: 40, 
     marginHorizontal: 10,
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.3)'
