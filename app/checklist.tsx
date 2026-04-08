@@ -6,8 +6,9 @@ import {
 } from "react-native";
 import { ChevronRight, Search, CheckCircle2, Check } from 'lucide-react-native';
 
-// Importação dos dados
+// Importação dos dados oficiais
 import { ACESSORIOSADE } from "../constants/data/acessoriosade";
+import { ARMAS } from "../constants/data/armamentos";
 
 interface InventarioItem {
   id: number;
@@ -21,28 +22,27 @@ interface InventarioItem {
   pagLivro?: string;
 }
 
-const DADOS_LOCAIS: InventarioItem[] = [
-  { id: 1, cat: "armas", desc: "Fuzil IA2 5.56mm", serie: "ITA-12345", qtd: 1, pmpr: "10.123", status: "pendente" },
-  { id: 2, cat: "armas", desc: "Pistola Glock G17", serie: "ADR-9988", qtd: 1, pmpr: "12.445", status: "pendente" },
-];
-
 export default function ChecklistRefinado() {
+  // Inicializa o estado com a união dos armamentos e acessórios
   const [items, setItems] = useState<InventarioItem[]>(() => [
-    ...DADOS_LOCAIS,
+    ...(ARMAS as InventarioItem[]),
     ...(ACESSORIOSADE as InventarioItem[])
   ]);
-  const [abaAtiva, setAbaAtiva] = useState("acess sade");
+
+  const [abaAtiva, setAbaAtiva] = useState("armamento"); // "armamento" é o cat do seu novo arquivo
   const [filtroTexto, setFiltroTexto] = useState("");
   
-  // Estados para animação
+  // Estados para animação suave
   const [itemSaindo, setItemSaindo] = useState<number | null>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
+  // Lógica de Progresso Geral
   const totalGeral = items.length;
   const concluidosGeral = items.filter(i => i.status === "ok").length;
   const progresso = totalGeral > 0 ? Math.round((concluidosGeral / totalGeral) * 100) : 0;
 
-  const categorias = ["armas", "munições", "taser", "equip", "rádios", "vtr", "sade", "acess sade"];
+  // Categorias disponíveis no sistema
+  const categorias = ["armamento", "munições", "taser", "equip", "rádios", "vtr", "sade", "acess sade"];
 
   const getContagem = (cat: string) => {
     const total = items.filter(i => i.cat === cat).length;
@@ -50,18 +50,23 @@ export default function ChecklistRefinado() {
     return { total, pendentes };
   };
 
+  // Filtro inteligente (Busca por Descrição, Série ou PMPR)
   const itensFiltrados = useMemo(() => {
     return items.filter(i =>
       i.cat === abaAtiva &&
       i.status === "pendente" &&
-      (i.desc.toLowerCase().includes(filtroTexto.toLowerCase()) || i.serie.toLowerCase().includes(filtroTexto.toLowerCase()))
+      (
+        i.desc.toLowerCase().includes(filtroTexto.toLowerCase()) || 
+        i.serie.toLowerCase().includes(filtroTexto.toLowerCase()) ||
+        (i.pmpr && i.pmpr.toLowerCase().includes(filtroTexto.toLowerCase()))
+      )
     );
   }, [items, abaAtiva, filtroTexto]);
 
   const handleCheck = (id: number) => {
     setItemSaindo(id);
 
-    // Animação de esmaecimento suave (800ms)
+    // Animação de 800ms conforme solicitado para o padrão "Sênior"
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 800, 
@@ -82,6 +87,7 @@ export default function ChecklistRefinado() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
+      {/* HEADER COM PROGRESSO */}
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>CARGA 17º BPM</Text>
@@ -99,11 +105,12 @@ export default function ChecklistRefinado() {
          <Text style={styles.statsText}>{concluidosGeral} DE {totalGeral} ITENS CONCLUÍDOS</Text>
       </View>
 
+      {/* SELEÇÃO DE CATEGORIAS E BUSCA */}
       <View style={styles.filterSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
           {categorias.map(cat => {
             const { total, pendentes } = getContagem(cat);
-            if (total === 0) return null;
+            if (total === 0) return null; // Não mostra categoria vazia
             const ativo = abaAtiva === cat;
             return (
               <TouchableOpacity key={cat} onPress={() => setAbaAtiva(cat)} style={[styles.tab, ativo && styles.tabActive]}>
@@ -118,7 +125,7 @@ export default function ChecklistRefinado() {
         <View style={styles.searchContainer}>
           <Search size={18} color="#94a3b8" style={styles.searchIcon} />
           <TextInput
-            placeholder="Buscar por descrição ou série..."
+            placeholder="Buscar por descrição, série ou PMPR..."
             style={styles.searchInput}
             value={filtroTexto}
             onChangeText={setFiltroTexto}
@@ -127,9 +134,10 @@ export default function ChecklistRefinado() {
         </View>
       </View>
 
+      {/* LISTAGEM DE ITENS */}
       <FlatList
         data={itensFiltrados}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={item => `${item.cat}-${item.id}`}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => {
           const isFinalizando = itemSaindo === item.id;
@@ -149,6 +157,7 @@ export default function ChecklistRefinado() {
                 <View style={styles.cardContent}>
                   <View style={styles.badgeRow}>
                     <View style={styles.qtdBadge}><Text style={styles.qtdText}>{item.qtd} UN</Text></View>
+                    {item.pmpr && <Text style={styles.pmprText}>PMPR: {item.pmpr}</Text>}
                     <Text style={styles.serieText}>SN: {item.serie}</Text>
                   </View>
                   <Text style={styles.itemDesc} numberOfLines={3}>{item.desc}</Text>
@@ -160,11 +169,7 @@ export default function ChecklistRefinado() {
                   style={[styles.actionButton, isFinalizando && styles.actionButtonSuccess]} 
                   onPress={() => handleCheck(item.id)}
                 >
-                  {isFinalizando ? (
-                    <Check size={24} color="#fff" />
-                  ) : (
-                    <ChevronRight size={24} color="#3b82f6" />
-                  )}
+                  {isFinalizando ? <Check size={24} color="#fff" /> : <ChevronRight size={24} color="#3b82f6" />}
                 </TouchableOpacity>
               </View>
 
@@ -193,6 +198,7 @@ export default function ChecklistRefinado() {
         }
       />
 
+      {/* BOTÃO FLUTUANTE DE FINALIZAÇÃO */}
       <View style={styles.footerAction}>
          <TouchableOpacity 
           style={[styles.sendButton, progresso < 100 && styles.sendButtonDisabled]}
@@ -230,7 +236,7 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 12, fontWeight: '700', color: '#64748B' },
   tabTextActive: { color: '#fff' },
 
-  searchContainer: { flexDirection: 'row', alignItems: 'center', margin: 15, backgroundColor: '#F1F5F9', borderRadius: 14, paddingHorizontal: 12 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', margin: 15, marginTop: 5, backgroundColor: '#F1F5F9', borderRadius: 14, paddingHorizontal: 12 },
   searchIcon: { marginRight: 8 },
   searchInput: { flex: 1, height: 48, fontSize: 14, color: '#1E293B' },
 
@@ -244,23 +250,21 @@ const styles = StyleSheet.create({
   },
   cardMainRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   cardContent: { flex: 1, paddingRight: 10 },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
   qtdBadge: { backgroundColor: '#1E293B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   qtdText: { color: '#fff', fontSize: 10, fontWeight: '900' },
-  serieText: { color: '#3B82F6', fontSize: 12, fontWeight: '700' },
-  itemDesc: { fontSize: 16, fontWeight: '700', color: '#1E293B', lineHeight: 22 },
+  serieText: { color: '#3B82F6', fontSize: 11, fontWeight: '700' },
+  pmprText: { color: '#64748B', fontSize: 11, fontWeight: '700' },
+  itemDesc: { fontSize: 15, fontWeight: '700', color: '#1E293B', lineHeight: 20 },
   
   actionButton: { 
-    width: 52, height: 52, borderRadius: 18, backgroundColor: '#F1F5F9', 
+    width: 50, height: 50, borderRadius: 18, backgroundColor: '#F1F5F9', 
     alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E2E8F0' 
   },
-  actionButtonSuccess: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
-  },
+  actionButtonSuccess: { backgroundColor: '#10B981', borderColor: '#10B981' },
 
   cardFooter: { flexDirection: 'row', gap: 10, marginTop: 15, borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 15 },
-  miniInput: { flex: 1, height: 42, backgroundColor: '#F8FAFC', borderRadius: 10, paddingHorizontal: 12, fontSize: 12, borderWidth: 1, borderColor: '#E2E8F0', color: '#1E293B' },
+  miniInput: { flex: 1, height: 40, backgroundColor: '#F8FAFC', borderRadius: 10, paddingHorizontal: 12, fontSize: 11, borderWidth: 1, borderColor: '#E2E8F0', color: '#1E293B' },
 
   footerAction: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: 'rgba(255,255,255,0.95)' },
   sendButton: { height: 58, borderRadius: 20, backgroundColor: '#10B981', alignItems: 'center', justifyContent: 'center', elevation: 2 },

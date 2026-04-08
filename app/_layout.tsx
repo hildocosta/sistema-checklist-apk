@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router'; // Adicionado usePathname
 import { Drawer } from 'expo-router/drawer';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -34,7 +34,11 @@ SplashScreen.preventAutoHideAsync();
 
 function CustomDrawerContent(props: any) {
   const router = useRouter();
-  
+  const pathname = usePathname(); // Detecta a rota ativa
+
+  // Função auxiliar para definir se o item está ativo
+  const isActive = (path: string) => pathname.startsWith(path);
+
   return (
     <View style={{ flex: 1, backgroundColor: '#020617' }}>
       <DrawerContentScrollView 
@@ -63,22 +67,42 @@ function CustomDrawerContent(props: any) {
 
           {/* ITENS DO MENU */}
           <View style={styles.menuItemsContainer}>
+            
+            {/* Dashboard */}
             <DrawerItem
               label="Dashboard"
-              labelStyle={styles.drawerLabel}
-              icon={({ size }) => <LayoutDashboard size={size} color="#3b82f6" />}
+              labelStyle={[
+                styles.drawerLabel, 
+                isActive('/(tabs)') && { color: '#3b82f6', fontWeight: 'bold' }
+              ]}
+              icon={({ size }) => (
+                <LayoutDashboard size={size} color={isActive('/(tabs)') ? "#3b82f6" : "#94a3b8"} />
+              )}
               onPress={() => router.push('/(tabs)')}
-              style={styles.drawerItemStyle}
+              style={[
+                styles.drawerItemStyle,
+                isActive('/(tabs)') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
+              ]}
             />
             
+            {/* CheckList */}
             <DrawerItem
               label="CheckList"
-              labelStyle={styles.drawerLabel}
-              icon={({ size }) => <ClipboardCheck size={size} color="#3b82f6" />} // Cor azul para indicar ativo
-              onPress={() => router.push('/checklist')} // Rota vinculada ao arquivo checklist.tsx
-              style={styles.drawerItemStyle}
+              labelStyle={[
+                styles.drawerLabel, 
+                isActive('/checklist') && { color: '#3b82f6', fontWeight: 'bold' }
+              ]}
+              icon={({ size }) => (
+                <ClipboardCheck size={size} color={isActive('/checklist') ? "#3b82f6" : "#94a3b8"} />
+              )}
+              onPress={() => router.push('/checklist')}
+              style={[
+                styles.drawerItemStyle,
+                isActive('/checklist') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
+              ]}
             />
             
+            {/* Relatórios */}
             <DrawerItem
               label="Relatórios"
               labelStyle={styles.drawerLabel}
@@ -87,6 +111,7 @@ function CustomDrawerContent(props: any) {
               style={styles.drawerItemStyle}
             />
 
+            {/* Usuários */}
             <DrawerItem
               label="Usuários"
               labelStyle={styles.drawerLabel}
@@ -95,6 +120,7 @@ function CustomDrawerContent(props: any) {
               style={styles.drawerItemStyle}
             />
 
+            {/* Perfil */}
             <DrawerItem
               label="Perfil"
               labelStyle={styles.drawerLabel}
@@ -103,6 +129,7 @@ function CustomDrawerContent(props: any) {
               style={styles.drawerItemStyle}
             />
 
+            {/* Cadastrar */}
             <DrawerItem
               label="Cadastrar"
               labelStyle={styles.drawerLabel}
@@ -159,19 +186,14 @@ function RootLayoutNav() {
           overlayColor: 'rgba(0,0,0,0.6)',
         }}
       >
-        {/* Escondemos index e splash do menu lateral, mas mantemos as rotas */}
         <Drawer.Screen name="index" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
         <Drawer.Screen name="splash" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
-        
-        {/* Telas visíveis via DrawerItem (opcionalmente visíveis no Drawer nativo também) */}
         <Drawer.Screen name="(tabs)" options={{ title: 'Painel' }} />
-        
-        {/* Nova Tela de Checklist vinculada */}
         <Drawer.Screen 
           name="checklist" 
           options={{ 
             title: 'Conferência Digital',
-            headerShown: true, // Habilitado para ter botão de voltar ou menu
+            headerShown: true,
             headerTintColor: '#fff',
             headerStyle: { backgroundColor: '#020617' }
           }} 
@@ -182,10 +204,7 @@ function RootLayoutNav() {
 }
 
 const styles = StyleSheet.create({
-  centralizer: {
-    justifyContent: 'center',
-    flex: 1,
-  },
+  centralizer: { justifyContent: 'center', flex: 1 },
   drawerHeader: { 
     paddingHorizontal: 24, 
     flexDirection: 'row', 
@@ -196,30 +215,11 @@ const styles = StyleSheet.create({
   logoContainer: { width: 42, height: 42 },
   logoImage: { width: '100%', height: '100%' },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  headerSubtitle: {
-    color: '#3b82f6',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#1e293b',
-    marginHorizontal: 24,
-    marginVertical: 15,
-  },
-  menuItemsContainer: {
-    paddingHorizontal: 12,
-  },
-  drawerItemStyle: {
-    marginVertical: -2,
-  },
-  drawerLabel: { 
-    color: '#94a3b8', 
-    fontSize: 15, 
-    fontWeight: '500',
-    marginLeft: 10, 
-  },
+  headerSubtitle: { color: '#3b82f6', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  divider: { height: 1, backgroundColor: '#1e293b', marginHorizontal: 24, marginVertical: 15 },
+  menuItemsContainer: { paddingHorizontal: 12 },
+  drawerItemStyle: { marginVertical: 2, borderRadius: 8 }, // Ajustado para melhor clique
+  drawerLabel: { color: '#94a3b8', fontSize: 15, fontWeight: '500', marginLeft: 10 },
   logoutButtonInline: { 
     backgroundColor: '#1e3a8a', 
     flexDirection: 'row', 
@@ -233,10 +233,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.3)'
   },
-  logoutText: { 
-    color: '#fff', 
-    fontWeight: 'bold',
-    fontSize: 13,
-    letterSpacing: 0.5
-  },
+  logoutText: { color: '#fff', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 },
 });
