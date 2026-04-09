@@ -6,56 +6,46 @@ import {
   ImageBackground,
   KeyboardAvoidingView, 
   Platform, 
-  ScrollView,
-  TouchableOpacity,
-  Alert 
+  ScrollView, 
+  TouchableOpacity 
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
-import { ArrowLeft } from "lucide-react-native"; 
+import { ArrowLeft, MailCheck } from "lucide-react-native"; 
 import { StatusBar } from "expo-status-bar";
 
-// Importação dos estilos externos
+// Importação dos estilos
 import { styles } from "./styles";
 
 // Componentes Customizados
 import { PrimaryButton } from "../../components/PrimaryButton"; 
 import { CustomInput } from "../../components/CustomInput";
 
-export default function RegisterPage() {
-  const [name, setName] = useState("");
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const router = useRouter();
 
-  const handleRegister = async () => {
+  const handleResetRequest = async () => {
     setIsLoading(true);
     setError("");
 
-    if (name === "" || email === "" || password === "") {
-      setError("PREENCHA TODOS OS CAMPOS.");
+    if (email === "") {
+      setError("POR FAVOR, INFORME SEU E-MAIL.");
       setIsLoading(false);
       return;
     }
 
-    if (password.length < 6) {
-      setError("A SENHA DEVE TER PELO MENOS 6 CARACTERES.");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setTimeout(() => {
+    setTimeout(() => {
+      if (email.includes("@pm.pr.gov.br")) {
         setIsLoading(false);
-        Alert.alert("Sucesso", "CONTA CRIADA COM SUCESSO!", [
-          { text: "OK", onPress: () => router.push("/") }
-        ]);
-      }, 1500);
-    } catch (err) {
-      setError("ERRO AO CRIAR CONTA. TENTE NOVAMENTE.");
-      setIsLoading(false);
-    }
+        setIsSubmitted(true);
+      } else {
+        setError("E-MAIL NÃO ENCONTRADO OU INVÁLIDO.");
+        setIsLoading(false);
+      }
+    }, 1500);
   };
 
   return (
@@ -86,62 +76,84 @@ export default function RegisterPage() {
             </View>
 
             <View style={styles.card}>
-              <View style={styles.textHeader}>
-                <Text style={styles.title}>Nova Conta</Text>
-                <Text style={styles.subtitle}>Crie seu acesso administrativo abaixo</Text>
-              </View>
-
-              <View style={styles.errorWrapper}>
-                {error ? (
-                  <View style={styles.errorBox}>
-                    <Text style={styles.errorText}>{error}</Text>
+              {!isSubmitted ? (
+                <View>
+                  <View style={styles.textHeader}>
+                    <Text style={styles.title}>Recuperar Senha</Text>
+                    <Text style={styles.subtitle}>O link de redefinição será enviado ao seu e-mail</Text>
                   </View>
-                ) : null}
-              </View>
 
-              <View style={styles.form}>
-                <CustomInput 
-                  label="NOME COMPLETO"
-                  placeholder="Ex: Cb. Silva"
-                  value={name}
-                  onChangeText={setName}
-                />
+                  <View style={styles.errorWrapper}>
+                    {error ? (
+                      <View style={styles.errorBox}>
+                        <Text style={styles.errorText}>{error}</Text>
+                      </View>
+                    ) : null}
+                  </View>
 
-                <CustomInput 
-                  label="E-MAIL"
-                  placeholder="E-mail institucional..."
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+                  <View style={styles.form}>
+                    <CustomInput 
+                      label="E-MAIL INSTITUCIONAL"
+                      placeholder="seu.nome@pm.pr.gov.br"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
 
-                <View style={{ marginBottom: 10 }}> 
-                  <CustomInput 
-                    label="SENHA"
-                    placeholder="Crie uma senha..."
-                    value={password}
-                    onChangeText={setPassword}
-                    isPassword
-                  />
+                    <View style={{ marginTop: 15 }}>
+                      <PrimaryButton 
+                        title={isLoading ? "ENVIANDO..." : "SOLICITAR REDEFINIÇÃO"}
+                        onPress={handleResetRequest}
+                        isLoading={isLoading}
+                      />
+                    </View>
+                    
+                    <View style={styles.divider} />
+
+                    {/* AJUSTADO: Usando registerContainer e registerText que já existem no seu styles */}
+                    <TouchableOpacity 
+                      onPress={() => router.back()}
+                      style={styles.registerContainer} 
+                    >
+                      <ArrowLeft size={16} color="#3b82f6" style={{marginRight: 8}}/>
+                      <Text style={styles.registerText}>Voltar ao Login</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
+              ) : (
+                <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+                  <View style={{ 
+                    backgroundColor: '#f0fdf4', 
+                    padding: 20, 
+                    borderRadius: 100, 
+                    marginBottom: 20,
+                  }}>
+                    <MailCheck color="#22c55e" size={45} />
+                  </View>
+                  
+                  <Text style={styles.title}>Verifique seu E-mail</Text>
+                  <Text style={[styles.subtitle, { marginBottom: 30, textAlign: 'center' }]}>
+                    Enviamos as instruções para:{"\n"}
+                    <Text style={{fontWeight: 'bold', color: '#1e293b'}}>{email}</Text>
+                  </Text>
 
-                <PrimaryButton 
-                  title="CRIAR MINHA CONTA"
-                  onPress={handleRegister}
-                  isLoading={isLoading}
-                />
-                
-                <View style={styles.divider} />
+                  <PrimaryButton 
+                    title="IR PARA O LOGIN"
+                    onPress={() => router.replace("/")} 
+                  />
 
-                <TouchableOpacity 
-                  onPress={() => router.back()}
-                  style={styles.backButton}
-                >
-                  <ArrowLeft size={14} color="#3b82f6" style={{marginRight: 5}}/>
-                  <Text style={styles.backButtonText}>Voltar ao Login</Text>
-                </TouchableOpacity>
-              </View>
+                  <TouchableOpacity 
+                    onPress={() => setIsSubmitted(false)}
+                    style={{ marginTop: 25 }}
+                  >
+                    {/* AJUSTADO: Usando registerText que já existe */}
+                    <Text style={[styles.registerText, { textDecorationLine: 'underline' }]}>
+                      Tentar outro e-mail
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </View>
         </ScrollView>

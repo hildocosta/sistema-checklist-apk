@@ -1,10 +1,10 @@
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { useRouter, usePathname } from 'expo-router'; // Adicionado usePathname
+import { useRouter, usePathname } from 'expo-router'; 
 import { Drawer } from 'expo-router/drawer';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -17,7 +17,8 @@ import {
   Users, 
   Power,
   UserCircle,
-  UserPlus
+  UserPlus,
+  Shield
 } from 'lucide-react-native';
 
 import { useColorScheme } from '@/components/useColorScheme';
@@ -34,9 +35,8 @@ SplashScreen.preventAutoHideAsync();
 
 function CustomDrawerContent(props: any) {
   const router = useRouter();
-  const pathname = usePathname(); // Detecta a rota ativa
+  const pathname = usePathname(); 
 
-  // Função auxiliar para definir se o item está ativo
   const isActive = (path: string) => pathname.startsWith(path);
 
   return (
@@ -68,7 +68,6 @@ function CustomDrawerContent(props: any) {
           {/* ITENS DO MENU */}
           <View style={styles.menuItemsContainer}>
             
-            {/* Dashboard */}
             <DrawerItem
               label="Dashboard"
               labelStyle={[
@@ -85,7 +84,6 @@ function CustomDrawerContent(props: any) {
               ]}
             />
             
-            {/* CheckList */}
             <DrawerItem
               label="CheckList"
               labelStyle={[
@@ -102,7 +100,6 @@ function CustomDrawerContent(props: any) {
               ]}
             />
             
-            {/* Relatórios */}
             <DrawerItem
               label="Relatórios"
               labelStyle={styles.drawerLabel}
@@ -111,7 +108,6 @@ function CustomDrawerContent(props: any) {
               style={styles.drawerItemStyle}
             />
 
-            {/* Usuários */}
             <DrawerItem
               label="Usuários"
               labelStyle={styles.drawerLabel}
@@ -120,16 +116,22 @@ function CustomDrawerContent(props: any) {
               style={styles.drawerItemStyle}
             />
 
-            {/* Perfil */}
             <DrawerItem
-              label="Perfil"
-              labelStyle={styles.drawerLabel}
-              icon={({ size }) => <UserCircle size={size} color="#94a3b8" />}
-              onPress={() => console.log('Perfil')}
-              style={styles.drawerItemStyle}
+              label="Meu Perfil"
+              labelStyle={[
+                styles.drawerLabel, 
+                isActive('/perfil') && { color: '#3b82f6', fontWeight: 'bold' }
+              ]}
+              icon={({ size }) => (
+                <UserCircle size={size} color={isActive('/perfil') ? "#3b82f6" : "#94a3b8"} />
+              )}
+              onPress={() => router.push('/perfil')}
+              style={[
+                styles.drawerItemStyle,
+                isActive('/perfil') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
+              ]}
             />
 
-            {/* Cadastrar */}
             <DrawerItem
               label="Cadastrar"
               labelStyle={styles.drawerLabel}
@@ -138,7 +140,6 @@ function CustomDrawerContent(props: any) {
               style={styles.drawerItemStyle}
             />
 
-            {/* BOTÃO SAIR */}
             <TouchableOpacity 
               style={styles.logoutButtonInline} 
               onPress={() => router.replace('/')}
@@ -189,13 +190,33 @@ function RootLayoutNav() {
         <Drawer.Screen name="index" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
         <Drawer.Screen name="splash" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
         <Drawer.Screen name="(tabs)" options={{ title: 'Painel' }} />
+        
         <Drawer.Screen 
           name="checklist" 
           options={{ 
-            title: 'Conferência Digital',
+            title: 'CONFERÊNCIA DIGITAL',
             headerShown: true,
             headerTintColor: '#fff',
-            headerStyle: { backgroundColor: '#020617' }
+            headerTitleStyle: { fontWeight: '900', fontSize: 16 },
+            headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 }
+          }} 
+        />
+       
+        <Drawer.Screen 
+          name="perfil" 
+          options={{ 
+            title: 'MEU PERFIL',
+            headerShown: true,
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: '900', fontSize: 16 },
+            headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 },
+            // AQUI ESTÁ A CORREÇÃO: Badge injetado via headerRight
+            headerRight: () => (
+              <View style={styles.badgeNivel}>
+                <Shield size={12} color="#3b82f6" />
+                <Text style={styles.badgeText}>OPERADOR</Text>
+              </View>
+            ),
           }} 
         />
       </Drawer>
@@ -218,7 +239,7 @@ const styles = StyleSheet.create({
   headerSubtitle: { color: '#3b82f6', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
   divider: { height: 1, backgroundColor: '#1e293b', marginHorizontal: 24, marginVertical: 15 },
   menuItemsContainer: { paddingHorizontal: 12 },
-  drawerItemStyle: { marginVertical: 2, borderRadius: 8 }, // Ajustado para melhor clique
+  drawerItemStyle: { marginVertical: 2, borderRadius: 8 }, 
   drawerLabel: { color: '#94a3b8', fontSize: 15, fontWeight: '500', marginLeft: 10 },
   logoutButtonInline: { 
     backgroundColor: '#1e3a8a', 
@@ -234,4 +255,24 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(59, 130, 246, 0.3)'
   },
   logoutText: { color: '#fff', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 },
+  
+  // ESTILOS DO BADGE PARA O HEADER
+  badgeNivel: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 5,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)', 
+    paddingHorizontal: 10, 
+    paddingVertical: 5, 
+    borderRadius: 8, 
+    marginRight: 15,
+    borderWidth: 1, 
+    borderColor: 'rgba(59, 130, 246, 0.3)' 
+  },
+  badgeText: { 
+    fontSize: 10, 
+    fontWeight: '800', 
+    color: '#3B82F6',
+    textTransform: 'uppercase'
+  },
 });

@@ -12,7 +12,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
-        // CENTRALIZAÇÃO REAL AQUI
+      
         headerTitleAlign: 'center', 
         
         headerStyle: { 
@@ -31,7 +31,7 @@ export default function TabLayout() {
           paddingLeft: 15,
         },
         
-        // Removemos o headerTitleContainerStyle antigo para não dar conflito
+       
         
         headerLeft: () => (
           <TouchableOpacity 
@@ -42,8 +42,7 @@ export default function TabLayout() {
           </TouchableOpacity>
         ),
 
-        // Adicionamos um elemento vazio à direita para equilibrar o peso visual
-        // Isso garante que o título fique matematicamente no centro da tela
+        
         headerRight: () => <TouchableOpacity style={{ marginRight: 15, width: 28 }} />,
 
         tabBarStyle: {
