@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // DADOS SIMULADOS PARA TESTE
+ 
   const MOCK_USER = {
     email: "admin@pm.pr.gov.br",
     password: "123"
@@ -33,7 +33,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
     
-    // Simula um delay de rede de 1.2 segundos
+    
     setTimeout(() => {
       if (email === "" || password === "") {
         setError("POR FAVOR, PREENCHA TODOS OS CAMPOS.");
@@ -41,10 +41,10 @@ export default function LoginPage() {
         return;
       }
 
-      // Validação simulada
+     
       if (email === MOCK_USER.email && password === MOCK_USER.password) {
         setIsLoading(false);
-        // Sucesso: Vai para as Tabs e limpa o histórico de navegação
+        
         router.replace("/(tabs)");
       } else {
         setError("E-MAIL OU SENHA INCORRETOS.");

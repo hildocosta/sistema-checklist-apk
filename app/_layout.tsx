@@ -93,7 +93,7 @@ function CustomDrawerContent(props: any) {
               icon={({ size }) => (
                 <ClipboardCheck size={size} color={isActive('/checklist') ? "#3b82f6" : "#94a3b8"} />
               )}
-              onPress={() => router.push('/checklist')}
+              onPress={() => router.push('/checklist/checklist')}
               style={[
                 styles.drawerItemStyle,
                 isActive('/checklist') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
@@ -125,7 +125,7 @@ function CustomDrawerContent(props: any) {
               icon={({ size }) => (
                 <UserCircle size={size} color={isActive('/perfil') ? "#3b82f6" : "#94a3b8"} />
               )}
-              onPress={() => router.push('/perfil')}
+              onPress={() => router.push('/perfil/perfil')}
               style={[
                 styles.drawerItemStyle,
                 isActive('/perfil') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
@@ -192,9 +192,9 @@ function RootLayoutNav() {
         <Drawer.Screen name="(tabs)" options={{ title: 'Painel' }} />
         
         <Drawer.Screen 
-          name="checklist" 
+          name="checklist/checklist" 
           options={{ 
-            title: 'CONFERÊNCIA DIGITAL',
+            title: 'Conferência Digital',
             headerShown: true,
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: '900', fontSize: 16 },
@@ -203,9 +203,9 @@ function RootLayoutNav() {
         />
        
         <Drawer.Screen 
-          name="perfil" 
+          name="perfil/perfil" 
           options={{ 
-            title: 'MEU PERFIL',
+            title: 'Meu Perfil',
             headerShown: true,
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: '900', fontSize: 16 },
