@@ -28,10 +28,12 @@ const LogoBpm = require('../assets/images/bg-profile.png');
 
 export { ErrorBoundary } from 'expo-router';
 
+// CONFIGURAÇÃO: O App agora inicia obrigatoriamente pela Splash Customizada
 export const unstable_settings = {
-  initialRouteName: 'index', 
+  initialRouteName: 'splash', 
 };
 
+// Segura a Splash nativa do Android/iOS até que as fontes carreguem
 SplashScreen.preventAutoHideAsync();
 
 function CustomDrawerContent(props: any) {
@@ -62,7 +64,6 @@ function CustomDrawerContent(props: any) {
 
           <View style={styles.menuItemsContainer}>
             
-            {/* DASHBOARD - Rota: dashboard/dashboard */}
             <DrawerItem
               label="Dashboard"
               labelStyle={[styles.drawerLabel, isActive('/dashboard/dashboard') && styles.labelActive]}
@@ -145,6 +146,8 @@ export default function RootLayout() {
   });
 
   useEffect(() => { if (error) throw error; }, [error]);
+  
+  // Quando as fontes carregarem, a Splash nativa sai e revela a sua Splash Custom
   useEffect(() => { if (loaded) SplashScreen.hideAsync(); }, [loaded]);
 
   if (!loaded) return null;
@@ -170,10 +173,26 @@ function RootLayoutNav() {
           overlayColor: 'rgba(0,0,0,0.6)',
         }}
       >
-        {/* LOGIN - Escondido do menu */}
-        <Drawer.Screen name="index" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
+        {/* TELA DE SPLASH CUSTOMIZADA - Registrada como primeira rota */}
+        <Drawer.Screen 
+          name="splash" 
+          options={{ 
+            drawerItemStyle: { display: 'none' }, // Esconde do menu
+            swipeEnabled: false,                 // Bloqueia gestos de menu
+            headerShown: false                   // Sem topo
+          }} 
+        />
+
+        {/* LOGIN */}
+        <Drawer.Screen 
+          name="index" 
+          options={{ 
+            drawerItemStyle: { display: 'none' }, 
+            swipeEnabled: false 
+          }} 
+        />
         
-        {/* DASHBOARD - Configurado como tela principal com Header */}
+        {/* DASHBOARD */}
         <Drawer.Screen 
           name="dashboard/dashboard" 
           options={{ 

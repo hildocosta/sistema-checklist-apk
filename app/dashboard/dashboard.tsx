@@ -3,7 +3,6 @@ import {
   View, 
   Text, 
   ScrollView, 
-  ActivityIndicator, 
   RefreshControl,
   Dimensions
 } from "react-native";
@@ -13,10 +12,11 @@ import {
   HardDrive, 
   User, 
   AlertTriangle, 
-  BarChart3, 
-  Activity,
-  ChevronDown
+  Activity
 } from "lucide-react-native";
+
+
+import { DashboardSkeleton } from "../../components/Skeleton";
 import { styles } from "./styles";
 
 const { width } = Dimensions.get("window");
@@ -26,7 +26,6 @@ export default function DashboardComando() {
   const [data, setData] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  
   const mockData = {
     isPendente: true,
     turnoAlvo: "MATUTINO",
@@ -49,7 +48,7 @@ export default function DashboardComando() {
       setData(mockData);
       setIsLoading(false);
       setRefreshing(false);
-    }, 1500);
+    }, 2000); 
   };
 
   useEffect(() => {
@@ -62,21 +61,24 @@ export default function DashboardComando() {
   };
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text style={styles.loadingText}>SINCRONIZANDO COM A RESERVA...</Text>
-      </View>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
     <ScrollView 
       style={styles.container}
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      refreshControl={
+        <RefreshControl 
+          refreshing={refreshing} 
+          onRefresh={onRefresh} 
+          tintColor="#3B82F6"
+          colors={["#3B82F6"]}
+        />
+      }
     >
     
+      
       <View style={[styles.statusHeader, data.isPendente ? styles.headerAlert : styles.headerNormal]}>
         <View style={styles.headerInfo}>
           <Shield color="#FFF" size={24} />
