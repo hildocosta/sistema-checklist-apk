@@ -7,10 +7,14 @@ import {
   KeyboardAvoidingView, 
   Platform, 
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+
+// --- IMPORTAÇÃO DO CONTEXTO ---
+import { useAuth } from "../context/AuthContext";
 
 import { styles } from "./styles"; 
 import { PrimaryButton } from "../components/PrimaryButton"; 
@@ -21,36 +25,39 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
   const router = useRouter();
-
- 
-  const MOCK_USER = {
-    email: "admin@pm.pr.gov.br",
-    password: "123"
-  };
+  
+  // Puxamos a função de login real do seu contexto
+  const { signIn } = useAuth();
 
   const handleLogin = async () => {
+    // 1. Validação básica de campos vazios
+    if (email === "" || password === "") {
+      setError("POR FAVOR, PREENCHA TODOS OS CAMPOS.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
     
-    
-    setTimeout(() => {
-      if (email === "" || password === "") {
-        setError("POR FAVOR, PREENCHA TODOS OS CAMPOS.");
-        setIsLoading(false);
-        return;
-      }
-
-     
-      if (email === MOCK_USER.email && password === MOCK_USER.password) {
-        setIsLoading(false);
-        
-       router.replace("/dashboard/dashboard");
-      } else {
-        setError("E-MAIL OU SENHA INCORRETOS.");
-        setIsLoading(false);
-      }
-    }, 1200);
+    try {
+      // 2. Chamada para a API da Vercel através do Contexto
+      await signIn({
+        email: email.toLowerCase().trim(),
+        password: password
+      });
+      
+      // O redirecionamento para o dashboard já acontece dentro do AuthContext.tsx 
+      // se o status for 200.
+      
+    } catch (err: any) {
+      // 3. Tratamento de erro caso a API retorne falha
+      setError("E-MAIL OU SENHA INCORRETOS.");
+      console.log("Erro no login:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -97,7 +104,7 @@ export default function LoginPage() {
               <View style={styles.form}>
                 <CustomInput 
                   label="E-MAIL"
-                  placeholder="admin@pm.pr.gov.br"
+                  placeholder="exemplo@pm.pr.gov.br"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -106,7 +113,7 @@ export default function LoginPage() {
 
                 <CustomInput 
                   label="SENHA"
-                  placeholder="Sua senha..."
+                  placeholder="Digite sua senha..."
                   value={password}
                   onChangeText={setPassword}
                   isPassword

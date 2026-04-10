@@ -22,23 +22,25 @@ import {
   Activity
 } from 'lucide-react-native';
 
+// --- IMPORTAÇÕES DO AUTH QUE VOCÊ CRIOU ---
+import { AuthProvider, useAuth } from '../context/AuthContext';
 import { useColorScheme } from '@/components/useColorScheme';
 
 const LogoBpm = require('../assets/images/bg-profile.png'); 
 
 export { ErrorBoundary } from 'expo-router';
 
-// CONFIGURAÇÃO: O App agora inicia obrigatoriamente pela Splash Customizada
 export const unstable_settings = {
   initialRouteName: 'splash', 
 };
 
-// Segura a Splash nativa do Android/iOS até que as fontes carreguem
 SplashScreen.preventAutoHideAsync();
 
 function CustomDrawerContent(props: any) {
   const router = useRouter();
   const pathname = usePathname(); 
+  // Puxamos a função de sair do seu contexto
+  const { signOut } = useAuth();
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
@@ -124,9 +126,10 @@ function CustomDrawerContent(props: any) {
               style={[styles.drawerItemStyle, isActive('/perfil/perfil') && styles.itemActiveBackground]}
             />
 
+            {/* BOTÃO SAIR CONECTADO AO AUTHCONTEXT */}
             <TouchableOpacity 
               style={styles.logoutButtonInline} 
-              onPress={() => router.replace('/')}
+              onPress={() => signOut()} // Usa a função signOut que limpa o storage
               activeOpacity={0.8}
             >
               <Power size={18} color="#fff" />
@@ -139,6 +142,7 @@ function CustomDrawerContent(props: any) {
   );
 }
 
+// O ROOTLAYOUT É O PAI DE TUDO, AQUI ENTRA O AUTHPROVIDER
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -146,15 +150,16 @@ export default function RootLayout() {
   });
 
   useEffect(() => { if (error) throw error; }, [error]);
-  
-  // Quando as fontes carregarem, a Splash nativa sai e revela a sua Splash Custom
   useEffect(() => { if (loaded) SplashScreen.hideAsync(); }, [loaded]);
 
   if (!loaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <RootLayoutNav />
+      {/* O PROVIDER ENVOLVE TODA A NAVEGAÇÃO */}
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }
@@ -173,17 +178,15 @@ function RootLayoutNav() {
           overlayColor: 'rgba(0,0,0,0.6)',
         }}
       >
-        {/* TELA DE SPLASH CUSTOMIZADA - Registrada como primeira rota */}
         <Drawer.Screen 
           name="splash" 
           options={{ 
-            drawerItemStyle: { display: 'none' }, // Esconde do menu
-            swipeEnabled: false,                 // Bloqueia gestos de menu
-            headerShown: false                   // Sem topo
+            drawerItemStyle: { display: 'none' }, 
+            swipeEnabled: false, 
+            headerShown: false 
           }} 
         />
 
-        {/* LOGIN */}
         <Drawer.Screen 
           name="index" 
           options={{ 
@@ -192,7 +195,6 @@ function RootLayoutNav() {
           }} 
         />
         
-        {/* DASHBOARD */}
         <Drawer.Screen 
           name="dashboard/dashboard" 
           options={{ 

@@ -1,54 +1,71 @@
 import React, { useState, useEffect } from "react";
-import {
+import { 
   View, Text, TouchableOpacity, TextInput, Image, 
-  ScrollView, Platform, StatusBar, KeyboardAvoidingView
+  ScrollView, Platform, StatusBar, KeyboardAvoidingView, Alert 
 } from "react-native";
 import { 
   User, Mail, Camera, Save, 
-  Award, Building2, Phone, Hash 
+  Award, Building2, Phone, Hash, MapPin 
 } from "lucide-react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
+import { useAuth } from "../../context/AuthContext";
 import ProfileSkeleton from "../../components/ProfileSkeleton"; 
+import api from "../../service/api";
 import { styles } from "./styles";
 
 export default function ProfilePage() {
-  
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  
-  
+  const { user, setUser, loading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
-  const [user, setUser] = useState({
-    nome: "Cb. Silva",
-    email: "silva.militar@pm.pr.gov.br",
-    posto: "CABO",
-    re: "123.456-7",
-    setor: "PATRULHA RURAL",
-    unidade: "17º BPM",
-    telefone: "(41) 98888-8888",
-    image: null
-  });
+  const [name, setName] = useState("");
+  const [re, setRe] = useState("");
+  const [posto, setPosto] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [email, setEmail] = useState("");
+  const [setor, setSetor] = useState("");
+  const [unidade, setUnidade] = useState("");
 
-  
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false);
-    }, 1500);
+    if (user) {
+      const userData = user?.user || user;
+      setName(userData.name || "");
+      setRe(userData.re || "");
+      setPosto(userData.posto || "Sd. QP PM");
+      setTelefone(userData.telefone || "");
+      setEmail(userData.email || "");
+      setSetor(userData.setor || "");
+      setUnidade(userData.unidade || "17º BPM");
+    }
+  }, [user]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!name || !re) {
+      Alert.alert("Erro", "Nome e RG são campos obrigatórios.");
+      return;
+    }
     setIsSaving(true);
-    
-    setTimeout(() => setIsSaving(false), 1500);
+    try {
+      const userData = user?.user || user;
+      const response = await api.post("/mobile/update-profile", {
+        id: userData.id,
+        name, re, posto, telefone, email, setor, unidade
+      });
+
+      if (response.status === 200) {
+        const updatedData = { ...userData, name, re, posto, telefone, email, setor, unidade };
+        setUser(updatedData);
+        await AsyncStorage.setItem('@BPM17:user', JSON.stringify(updatedData));
+        Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
+      }
+    } catch (error: any) {
+      Alert.alert("Erro", "Não foi possível salvar as alterações.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
- 
-  if (isInitialLoading) {
-    return <ProfileSkeleton />;
-  }
+  if (loading) return <ProfileSkeleton />;
 
   return (
     <View style={styles.container}>
@@ -59,19 +76,18 @@ export default function ProfilePage() {
         style={{ flex: 1 }}
       >
         <ScrollView 
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]} 
           showsVerticalScrollIndicator={false}
         >
-          
           <View style={styles.headerBackground}>
             <Text style={styles.headerTitle}>Meu Perfil</Text>
-            <Text style={styles.headerSubtitle}>Dados Cadastrais</Text>
+            <Text style={styles.headerSubtitle}>Gerenciar Dados Militares</Text>
           </View>
 
           <View style={styles.avatarSection}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatarCircle}>
-                {user.image ? (
+                {user?.image ? (
                   <Image source={{ uri: user.image }} style={styles.avatarImg} />
                 ) : (
                   <User size={50} color="#cbd5e1" />
@@ -81,61 +97,74 @@ export default function ProfilePage() {
                 <Camera size={18} color="#fff" />
               </TouchableOpacity>
             </View>
-            
-            <Text style={styles.userName}>{user.nome}</Text>
-            <Text style={styles.userTag}>{user.posto} • RG {user.re}</Text>
+            <Text style={styles.userName}>{name || "Militar"}</Text>
+            <Text style={styles.userTag}>{posto} • RG {re || "---"}</Text>
           </View>
 
           <View style={styles.cardsContainer}>
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Award size={16} color="#3b82f6" />
-                <Text style={styles.cardTitle}>DADOS PROFISSIONAIS</Text>
+                <Text style={styles.cardTitle}>IDENTIFICAÇÃO PROFISSIONAL</Text>
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>NOME COMPLETO</Text>
                 <View style={styles.inputWrapper}>
                   <User size={18} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput style={styles.input} value={name} onChangeText={setName} />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>RG</Text>
+                <View style={[styles.inputWrapper, { borderColor: '#e2e8f0' }]}>
+                  <Hash size={18} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput 
                     style={styles.input}
-                    value={user.nome}
-                    onChangeText={(v) => setUser({...user, nome: v})}
+                    value={re} 
+                    onChangeText={setRe} 
+                    keyboardType="numeric" 
                   />
                 </View>
               </View>
 
               <View style={styles.row}>
-                <View style={[styles.inputGroup, { flex: 1.2 }]}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={styles.label}>POSTO/GRAD</Text>
-                  <View style={[styles.inputWrapper, styles.lightInput]}>
-                    <Award size={16} color="#94a3b8" style={styles.inputIcon} />
+                  <View style={styles.inputWrapper}>
                     <TextInput 
-                      style={styles.input}
-                      value={user.posto}
+                      style={[styles.input, { paddingLeft: 12 }]} 
+                      value={posto} 
+                      onChangeText={setPosto}
+                      placeholder="Posto"
+                      numberOfLines={1}
                     />
                   </View>
                 </View>
 
-                <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={styles.label}>RG</Text>
-                  <View style={[styles.inputWrapper, styles.lightInput]}>
-                    <Hash size={16} color="#94a3b8" style={styles.inputIcon} />
+                <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
+                  <Text style={styles.label}>SETOR</Text>
+                  <View style={styles.inputWrapper}>
                     <TextInput 
-                      style={styles.input}
-                      value={user.re}
+                      style={[styles.input, { paddingLeft: 12 }]} 
+                      value={setor} 
+                      onChangeText={setSetor} 
+                      placeholder="Setor"
                     />
                   </View>
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>UNIDADE / LOTAÇÃO</Text>
+                <Text style={styles.label}>UNIDADE / BPM</Text>
                 <View style={styles.inputWrapper}>
                   <Building2 size={18} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput 
-                    style={styles.input}
-                    value={user.unidade}
+                    style={styles.input} 
+                    value={unidade} 
+                    onChangeText={setUnidade} 
+                    placeholder="Ex: 17º BPM"
                   />
                 </View>
               </View>
@@ -144,41 +173,35 @@ export default function ProfilePage() {
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Phone size={16} color="#3b82f6" />
-                <Text style={styles.cardTitle}>CONTATO INSTITUCIONAL</Text>
+                <Text style={styles.cardTitle}>CONTATO E ACESSO</Text>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-MAIL</Text>
-                <View style={[styles.inputWrapper, styles.disabledInput]}>
-                  <Mail size={18} color="#cbd5e1" style={styles.inputIcon} />
-                  <TextInput 
-                    style={[styles.input, { color: '#94a3b8' }]}
-                    value={user.email}
-                    editable={false}
-                  />
+                <Text style={styles.label}>E-MAIL INSTITUCIONAL</Text>
+                <View style={styles.inputWrapper}>
+                  <Mail size={18} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>TELEFONE</Text>
+                <Text style={styles.label}>TELEFONE / WHATSAPP</Text>
                 <View style={styles.inputWrapper}>
                   <Phone size={18} color="#94a3b8" style={styles.inputIcon} />
-                  <TextInput 
-                    style={styles.input}
-                    value={user.telefone}
-                    keyboardType="phone-pad"
-                  />
+                  <TextInput style={styles.input} value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
                 </View>
               </View>
             </View>
           </View>
+
+          <View style={{ height: 80 }} /> 
         </ScrollView>
       </KeyboardAvoidingView>
 
       <View style={styles.footerAction}>
         <TouchableOpacity 
           activeOpacity={0.8}
-          style={styles.saveButton}
+          style={[styles.saveButton, isSaving && { opacity: 0.7 }]}
           onPress={handleSave}
           disabled={isSaving}
         >

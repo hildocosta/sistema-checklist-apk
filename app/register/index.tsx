@@ -15,15 +15,15 @@ import { ArrowLeft } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
 
 import { styles } from "./styles";
-
-
 import { PrimaryButton } from "../../components/PrimaryButton"; 
 import { CustomInput } from "../../components/CustomInput";
+import api from "../../service/api";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -32,27 +32,34 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError("");
 
-    if (name === "" || email === "" || password === "") {
-      setError("PREENCHA TODOS OS CAMPOS.");
+    if (!name || !email || !password) {
+      setError("PREENCHA NOME, E-MAIL E SENHA.");
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError("A SENHA DEVE TER PELO MENOS 6 CARACTERES.");
+      setError("A SENHA DEVE TER NO MÍNIMO 6 CARACTERES.");
       setIsLoading(false);
       return;
     }
 
     try {
-      setTimeout(() => {
-        setIsLoading(false);
-        Alert.alert("Sucesso", "CONTA CRIADA COM SUCESSO!", [
-          { text: "OK", onPress: () => router.push("/") }
+      const response = await api.post("/auth/register", {
+        name: name,
+        email: email.toLowerCase().trim(),
+        password: password
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        Alert.alert("Sucesso", "CONTA CRIADA! COMPLETE SEU PERFIL APÓS O LOGIN.", [
+          { text: "IR PARA LOGIN", onPress: () => router.replace("/") }
         ]);
-      }, 1500);
-    } catch (err) {
-      setError("ERRO AO CRIAR CONTA. TENTE NOVAMENTE.");
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.error || "ERRO AO CONECTAR COM O SERVIDOR.";
+      setError(msg.toUpperCase());
+    } finally {
       setIsLoading(false);
     }
   };
@@ -87,7 +94,7 @@ export default function RegisterPage() {
             <View style={styles.card}>
               <View style={styles.textHeader}>
                 <Text style={styles.title}>Nova Conta</Text>
-                <Text style={styles.subtitle}>Crie seu acesso administrativo abaixo</Text>
+                <Text style={styles.subtitle}>Cadastro Rápido - 17º BPM</Text>
               </View>
 
               <View style={styles.errorWrapper}>
@@ -101,35 +108,39 @@ export default function RegisterPage() {
               <View style={styles.form}>
                 <CustomInput 
                   label="NOME COMPLETO"
-                  placeholder="Ex: Cb. Silva"
+                  placeholder="Ex: Cb. João Silva"
                   value={name}
                   onChangeText={setName}
                 />
 
                 <CustomInput 
-                  label="E-MAIL"
-                  placeholder="E-mail institucional..."
+                  label="E-MAIL INSTITUCIONAL"
+                  placeholder="seu-email@pm.pr.gov.br"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
 
-                <View style={{ marginBottom: 10 }}> 
-                  <CustomInput 
-                    label="SENHA"
-                    placeholder="Crie uma senha..."
-                    value={password}
-                    onChangeText={setPassword}
-                    isPassword
+                <CustomInput 
+                  label="SENHA"
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChangeText={setPassword}
+                  isPassword
+                />
+
+                <Text style={{ fontSize: 11, color: '#666', textAlign: 'center', marginBottom: 15 }}>
+                  * Você preencherá o RE e Posto na tela de Perfil.
+                </Text>
+
+                <View style={{ marginTop: 5 }}>
+                  <PrimaryButton 
+                    title={isLoading ? "CRIANDO CONTA..." : "CRIAR CONTA"}
+                    onPress={handleRegister}
+                    isLoading={isLoading}
                   />
                 </View>
-
-                <PrimaryButton 
-                  title="CRIAR MINHA CONTA"
-                  onPress={handleRegister}
-                  isLoading={isLoading}
-                />
                 
                 <View style={styles.divider} />
 
@@ -138,7 +149,7 @@ export default function RegisterPage() {
                   style={styles.backButton}
                 >
                   <ArrowLeft size={14} color="#3b82f6" style={{marginRight: 5}}/>
-                  <Text style={styles.backButtonText}>Voltar ao Login</Text>
+                  <Text style={styles.backButtonText}>Já sou cadastrado. Login.</Text>
                 </TouchableOpacity>
               </View>
             </View>
