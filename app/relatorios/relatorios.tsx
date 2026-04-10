@@ -4,13 +4,14 @@ import {
   Text, 
   TouchableOpacity, 
   FlatList, 
-  ActivityIndicator, 
   Linking,
   TextInput 
 } from 'react-native';
 import { FileText, Search, Printer, ChevronRight, Calendar } from 'lucide-react-native';
 import { styles } from './styles';
 
+// Importação do Skeleton
+import HistorySkeleton from "../../components/HistorySkeleton";
 
 interface Relatorio {
   id: string;
@@ -27,10 +28,8 @@ export default function RelatoriosScreen() {
   const [selecionado, setSelecionado] = useState<Relatorio | null>(null);
   const [filtro, setFiltro] = useState("");
 
-  
   const fetchRelatorios = async () => {
     setIsLoading(true);
-    
 
     setTimeout(() => {
       const dadosSimulados: Relatorio[] = [
@@ -40,7 +39,7 @@ export default function RelatoriosScreen() {
           hora: '08:30',
           responsavel: 'SGT FURRIEL - 1ª CIA',
           hash: 'BPM17-998877665544332211',
-          pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' // PDF de teste
+          pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
         },
         {
           id: '2',
@@ -92,15 +91,18 @@ export default function RelatoriosScreen() {
     );
   };
 
+  // Verificação de Loading com o Skeleton
+  if (isLoading) {
+    return <HistorySkeleton />;
+  }
+
   return (
     <View style={styles.container}>
-     
       <View style={styles.headerBackground}>
         <Text style={styles.headerTitle}>Histórico</Text>
         <Text style={styles.headerSubtitle}>Arquivo de Conferências</Text>
       </View>
 
-     
       <View style={styles.searchSection}>
         <View style={styles.searchContainer}>
           <Calendar size={20} color="#94A3B8" />
@@ -115,24 +117,17 @@ export default function RelatoriosScreen() {
         </View>
       </View>
 
-      
-      {isLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#3B82F6" />
-        </View>
-      ) : (
-        <FlatList
-          data={lista}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <Text style={{ textAlign: 'center', marginTop: 50, color: '#94A3B8' }}>
-              Nenhum relatório encontrado.
-            </Text>
-          }
-        />
-      )}
+      <FlatList
+        data={lista}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 50, color: '#94A3B8' }}>
+            Nenhum relatório encontrado.
+          </Text>
+        }
+      />
 
       <View style={styles.footerAction}>
         <TouchableOpacity 

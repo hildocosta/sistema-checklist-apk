@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text, TouchableOpacity, TextInput, Image, 
   ScrollView, Platform, StatusBar, KeyboardAvoidingView
@@ -7,9 +7,18 @@ import {
   User, Mail, Camera, Save, 
   Award, Building2, Phone, Hash 
 } from "lucide-react-native";
+
+
+import ProfileSkeleton from "../../components/ProfileSkeleton"; 
 import { styles } from "./styles";
 
 export default function ProfilePage() {
+  
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  
+  
+  const [isSaving, setIsSaving] = useState(false);
+
   const [user, setUser] = useState({
     nome: "Cb. Silva",
     email: "silva.militar@pm.pr.gov.br",
@@ -21,7 +30,25 @@ export default function ProfilePage() {
     image: null
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleSave = () => {
+    setIsSaving(true);
+    
+    setTimeout(() => setIsSaving(false), 1500);
+  };
+
+ 
+  if (isInitialLoading) {
+    return <ProfileSkeleton />;
+  }
 
   return (
     <View style={styles.container}>
@@ -41,7 +68,6 @@ export default function ProfilePage() {
             <Text style={styles.headerSubtitle}>Dados Cadastrais</Text>
           </View>
 
-         
           <View style={styles.avatarSection}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatarCircle}>
@@ -60,7 +86,6 @@ export default function ProfilePage() {
             <Text style={styles.userTag}>{user.posto} • RG {user.re}</Text>
           </View>
 
-          {/* CONTAINER DE CARDS */}
           <View style={styles.cardsContainer}>
             <View style={styles.card}>
               <View style={styles.cardHeader}>
@@ -150,19 +175,16 @@ export default function ProfilePage() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      
       <View style={styles.footerAction}>
         <TouchableOpacity 
           activeOpacity={0.8}
           style={styles.saveButton}
-          onPress={() => {
-            setIsLoading(true);
-            setTimeout(() => setIsLoading(false), 1500);
-          }}
+          onPress={handleSave}
+          disabled={isSaving}
         >
           <Save size={18} color="#fff" style={{ marginRight: 8 }} />
           <Text style={styles.saveButtonText}>
-            {isLoading ? "SALVANDO..." : "SALVAR ALTERAÇÕES"}
+            {isSaving ? "SALVANDO..." : "SALVAR ALTERAÇÕES"}
           </Text>
         </TouchableOpacity>
       </View>

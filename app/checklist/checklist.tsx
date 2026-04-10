@@ -1,21 +1,34 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   View, Text, TouchableOpacity, TextInput,
   FlatList, SafeAreaView, Platform, StatusBar, Alert,
   ScrollView, Animated, Easing, LayoutAnimation
 } from "react-native";
-import { ChevronRight, Search, CheckCircle2, Check, PackageCheck } from 'lucide-react-native';
+import { ChevronRight, Search, Check, PackageCheck } from 'lucide-react-native';
+
 
 import { DATABASE_INICIAL, InventarioItem } from "../../constants/data";
+import ChecklistSkeleton from "../../components/ChecklistSkeleton";
 import { styles } from "./styles";
 
 export default function ChecklistRefinado() {
+ 
+  const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState<InventarioItem[]>(DATABASE_INICIAL);
   const [abaAtiva, setAbaAtiva] = useState("armamento"); 
   const [filtroTexto, setFiltroTexto] = useState("");
   const [itemSaindo, setItemSaindo] = useState<number | null>(null);
+  
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+ 
   const totalGeral = items.length;
   const concluidosGeral = items.filter(i => i.status === "ok").length;
   const progresso = totalGeral > 0 ? Math.round((concluidosGeral / totalGeral) * 100) : 0;
@@ -39,6 +52,7 @@ export default function ChecklistRefinado() {
     return labels[cat] || cat.toUpperCase();
   };
 
+  
   const itensFiltrados = useMemo(() => {
     return items.filter(i =>
       i.cat === abaAtiva &&
@@ -49,11 +63,12 @@ export default function ChecklistRefinado() {
     );
   }, [items, abaAtiva, filtroTexto]);
 
+ 
   const handleCheck = (id: number) => {
     setItemSaindo(id);
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 500,
+      duration: 400,
       easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start(() => {
@@ -64,9 +79,15 @@ export default function ChecklistRefinado() {
     });
   };
 
+ 
+  if (isLoading) {
+    return <ChecklistSkeleton />;
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#020617" />
+      
       
       <View style={styles.headerBackground}>
         <SafeAreaView>
@@ -89,7 +110,7 @@ export default function ChecklistRefinado() {
         </SafeAreaView>
       </View>
 
-     
+      
       <View style={styles.filterSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
           {categorias.map(cat => {
@@ -167,19 +188,20 @@ export default function ChecklistRefinado() {
                 </TouchableOpacity>
               </View>
 
+              
               <View style={styles.cardFooter}>
                 <TextInput 
                   placeholder="Cautela/Observação" 
                   style={styles.miniInput} 
-                  value={item.cautela} 
-                  onChangeText={v => {/* update function */}}
+                  defaultValue={item.cautela} 
                   placeholderTextColor="#cbd5e1"
                 />
                 <TextInput 
                   placeholder="Pág" 
                   style={[styles.miniInput, { flex: 0, width: 60, textAlign: 'center' }]} 
-                  value={item.pagLivro} 
+                  defaultValue={item.pagLivro} 
                   placeholderTextColor="#cbd5e1"
+                  keyboardType="numeric"
                 />
               </View>
             </Animated.View>
@@ -193,7 +215,7 @@ export default function ChecklistRefinado() {
         }
       />
 
-      
+     
       <View style={styles.footerAction}>
         <TouchableOpacity 
           activeOpacity={0.8}

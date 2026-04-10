@@ -1,9 +1,10 @@
 import { StyleSheet, Platform } from "react-native";
 
 export const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-  
-  // HEADER DARK PADRÃO 17BPM
+  container: { 
+    flex: 1, 
+    backgroundColor: "#F8FAFC" 
+  },
   headerBackground: {
     backgroundColor: "#020617",
     paddingBottom: 40,
@@ -12,12 +13,25 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 10,
   },
-  headerTitle: { fontSize: 22, fontWeight: '900', color: '#FFFFFF' },
-  headerSubtitle: { fontSize: 12, color: '#3B82F6', fontWeight: '700', textTransform: 'uppercase' },
-
-  // ABAS FLUTUANTES (MILITAR / ITEM)
-  filterSection: { marginTop: -25 }, 
-  tabsContainer: { paddingHorizontal: 20, flexDirection: 'row', gap: 10 },
+  headerTitle: { 
+    fontSize: 22, 
+    fontWeight: '900', 
+    color: '#FFFFFF' 
+  },
+  headerSubtitle: { 
+    fontSize: 12, 
+    color: '#3B82F6', 
+    fontWeight: '700', 
+    textTransform: 'uppercase' 
+  },
+  filterSection: { 
+    marginTop: -25 
+  }, 
+  tabsContainer: { 
+    paddingHorizontal: 20, 
+    flexDirection: 'row', 
+    gap: 10 
+  },
   tab: { 
     flex: 1,
     flexDirection: 'row',
@@ -34,12 +48,22 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     gap: 8
   },
-  tabActive: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
-  tabText: { fontSize: 11, fontWeight: '800', color: '#64748B' },
-  tabTextActive: { color: '#FFFFFF' },
-
-  // FORMULÁRIO
-  scrollContent: { padding: 20, paddingBottom: 120 },
+  tabActive: { 
+    backgroundColor: '#3B82F6', 
+    borderColor: '#3B82F6' 
+  },
+  tabText: { 
+    fontSize: 11, 
+    fontWeight: '800', 
+    color: '#64748B' 
+  },
+  tabTextActive: { 
+    color: '#FFFFFF' 
+  },
+  scrollContent: { 
+    padding: 20, 
+    paddingBottom: 120 
+  },
   card: { 
     backgroundColor: '#fff', 
     borderRadius: 24, 
@@ -67,9 +91,9 @@ export const styles = StyleSheet.create({
     letterSpacing: 1, 
     textTransform: 'uppercase' 
   },
-
-  // INPUTS
-  inputGroup: { marginBottom: 16 },
+  inputGroup: { 
+    marginBottom: 16 
+  },
   label: { 
     fontSize: 10, 
     fontWeight: '800', 
@@ -88,18 +112,26 @@ export const styles = StyleSheet.create({
     height: 48, 
     paddingHorizontal: 12
   },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 14, color: '#1E293B', fontWeight: '600' },
-  
-  pickerButton: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-
-  // --- RODAPÉ E BOTÕES (APLICADO AJUSTE FINO) ---
+  inputIcon: { 
+    marginRight: 10 
+  },
+  input: { 
+    flex: 1, 
+    fontSize: 14, 
+    color: '#1E293B', 
+    fontWeight: '600' 
+  },
+  pickerButton: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
+  },
   footerAction: { 
     position: 'absolute', 
     bottom: 0, 
     left: 0, 
     right: 0, 
-    paddingHorizontal: 50, // Mantém o botão centralizado e menos largo
+    paddingHorizontal: 50, 
     paddingTop: 10,
     paddingBottom: Platform.OS === 'android' ? 60 : 40, 
     backgroundColor: 'rgba(255, 255, 255, 0.98)',
@@ -112,7 +144,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 5
   },
   btnSalvar: { 
-    height: 42,         
+    height: 42,                
     borderRadius: 10, 
     backgroundColor: '#020617', 
     flexDirection: 'row',

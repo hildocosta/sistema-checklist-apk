@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   View, Text, FlatList, TextInput, TouchableOpacity, 
-  ActivityIndicator, Alert 
+  Alert, StatusBar, SafeAreaView 
 } from "react-native";
 import { 
   ShieldCheck, User, ShieldAlert, Search, 
   Edit3, Trash2 
 } from "lucide-react-native";
+
+import UsersSkeleton from "../../components/UsersSkeleton";
 import { styles } from "./styles";
 
 interface Usuario {
@@ -20,31 +22,32 @@ interface Usuario {
 }
 
 export default function UsuariosScreen() {
-  
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-   
     const mockData: Usuario[] = [
       { id: '1', nome: 'SANTOS', posto: '3º SGT. QP PM', re: '123.456-7', email: 'santos@pm.pr.gov.br', nivel: 'Admin', status: 'Ativo' },
       { id: '2', nome: 'OLIVEIRA', posto: 'SD. QP PM', re: '987.654-3', email: 'oliveira@pm.pr.gov.br', nivel: 'Operador', status: 'Ativo' },
       { id: '3', nome: 'SILVA', posto: 'CB. QP PM', re: '456.789-0', email: 'silva@pm.pr.gov.br', nivel: 'Operador', status: 'Inativo' },
     ];
 
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setUsuarios(mockData);
       setLoading(false);
-    }, 1000);
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const usuariosFiltrados = usuarios.filter(u => 
-    u.nome.toLowerCase().includes(busca.toLowerCase()) || 
-    u.re.includes(busca)
-  );
+  const usuariosFiltrados = useMemo(() => {
+    return usuarios.filter(u => 
+      u.nome.toLowerCase().includes(busca.toLowerCase()) || 
+      u.re.includes(busca)
+    );
+  }, [busca, usuarios]);
 
-  
   const renderUser = ({ item }: { item: Usuario }) => (
     <View style={styles.userCard}>
       <View style={styles.avatar}>
@@ -57,15 +60,32 @@ export default function UsuariosScreen() {
         <Text style={styles.userEmail} numberOfLines={1}>{item.email}</Text>
         
         <View style={styles.badgeRow}>
-          
-          <View style={{ backgroundColor: item.nivel === 'Admin' ? '#EEF2FF' : '#F1F5F9', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-            <Text style={{ fontSize: 9, fontWeight: '900', color: item.nivel === 'Admin' ? '#3B82F6' : '#64748B' }}>
+          <View style={{ 
+            backgroundColor: item.nivel === 'Admin' ? '#EEF2FF' : '#F1F5F9', 
+            paddingHorizontal: 8, 
+            paddingVertical: 2, 
+            borderRadius: 6 
+          }}>
+            <Text style={{ 
+              fontSize: 9, 
+              fontWeight: '900', 
+              color: item.nivel === 'Admin' ? '#3B82F6' : '#64748B' 
+            }}>
               {item.nivel.toUpperCase()}
             </Text>
           </View>
           
-          <View style={{ backgroundColor: item.status === 'Ativo' ? '#ECFDF5' : '#FEF2F2', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
-            <Text style={{ fontSize: 9, fontWeight: '900', color: item.status === 'Ativo' ? '#10B981' : '#EF4444' }}>
+          <View style={{ 
+            backgroundColor: item.status === 'Ativo' ? '#ECFDF5' : '#FEF2F2', 
+            paddingHorizontal: 8, 
+            paddingVertical: 2, 
+            borderRadius: 6 
+          }}>
+            <Text style={{ 
+              fontSize: 9, 
+              fontWeight: '900', 
+              color: item.status === 'Ativo' ? '#10B981' : '#EF4444' 
+            }}>
               {item.status.toUpperCase()}
             </Text>
           </View>
@@ -89,15 +109,21 @@ export default function UsuariosScreen() {
     </View>
   );
 
+  if (loading) {
+    return <UsersSkeleton />;
+  }
+
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#020617" />
       
       <View style={styles.headerInfo}>
-        <Text style={styles.title}>Usuários</Text>
-        <Text style={styles.subtitle}>Gestão de Acessos</Text>
+        <SafeAreaView>
+          <Text style={styles.title}>Usuários</Text>
+          <Text style={styles.subtitle}>Gestão de Acessos</Text>
+        </SafeAreaView>
       </View>
 
-      
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <ShieldCheck size={20} color="#3B82F6" />
@@ -122,7 +148,6 @@ export default function UsuariosScreen() {
         </View>
       </View>
 
-     
       <View style={styles.searchSection}>
         <View style={styles.searchInputContainer}>
           <Search size={18} color="#94A3B8" />
@@ -136,22 +161,18 @@ export default function UsuariosScreen() {
         </View>
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#3B82F6" style={{ marginTop: 50 }} />
-      ) : (
-        <FlatList 
-          data={usuariosFiltrados}
-          renderItem={renderUser}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={() => (
-            <Text style={{ textAlign: 'center', color: '#94A3B8', marginTop: 20 }}>
-              Nenhum militar encontrado.
-            </Text>
-          )}
-        />
-      )}
+      <FlatList 
+        data={usuariosFiltrados}
+        renderItem={renderUser}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={() => (
+          <Text style={{ textAlign: 'center', color: '#94A3B8', marginTop: 30, fontWeight: '600' }}>
+            Nenhum militar encontrado.
+          </Text>
+        )}
+      />
     </View>
   );
 }
