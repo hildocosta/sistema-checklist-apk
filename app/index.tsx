@@ -45,7 +45,7 @@ export default function LoginPage() {
       if (email === MOCK_USER.email && password === MOCK_USER.password) {
         setIsLoading(false);
         
-        router.replace("/(tabs)");
+       router.replace("/dashboard/dashboard");
       } else {
         setError("E-MAIL OU SENHA INCORRETOS.");
         setIsLoading(false);
