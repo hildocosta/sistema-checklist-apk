@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -37,6 +37,7 @@ function CustomDrawerContent(props: any) {
   const router = useRouter();
   const pathname = usePathname(); 
 
+  // Função para verificar se a rota está ativa (considerando subpastas)
   const isActive = (path: string) => pathname.startsWith(path);
 
   return (
@@ -62,7 +63,7 @@ function CustomDrawerContent(props: any) {
             </View>
           </View>
 
-          {/* DIVIDER */}
+          {/* DIVISOR */}
           <View style={styles.divider} />
 
           {/* ITENS DO MENU */}
@@ -85,18 +86,18 @@ function CustomDrawerContent(props: any) {
             />
             
             <DrawerItem
-              label="CheckList"
+              label="Conferência"
               labelStyle={[
                 styles.drawerLabel, 
-                isActive('/checklist') && { color: '#3b82f6', fontWeight: 'bold' }
+                isActive('/checklist/checklist') && { color: '#3b82f6', fontWeight: 'bold' }
               ]}
               icon={({ size }) => (
-                <ClipboardCheck size={size} color={isActive('/checklist') ? "#3b82f6" : "#94a3b8"} />
+                <ClipboardCheck size={size} color={isActive('/checklist/checklist') ? "#3b82f6" : "#94a3b8"} />
               )}
               onPress={() => router.push('/checklist/checklist')}
               style={[
                 styles.drawerItemStyle,
-                isActive('/checklist') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
+                isActive('/checklist/checklist') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
               ]}
             />
             
@@ -110,25 +111,33 @@ function CustomDrawerContent(props: any) {
 
             <DrawerItem
               label="Usuários"
-              labelStyle={styles.drawerLabel}
-              icon={({ size }) => <Users size={size} color="#94a3b8" />}
-              onPress={() => console.log('Usuários')}
-              style={styles.drawerItemStyle}
+              labelStyle={[
+                styles.drawerLabel, 
+                isActive('/usuarios/usuarios') && { color: '#3b82f6', fontWeight: 'bold' }
+              ]}
+              icon={({ size }) => (
+                <Users size={size} color={isActive('/usuarios/usuarios') ? "#3b82f6" : "#94a3b8"} />
+              )}
+              onPress={() => router.push('/usuarios/usuarios')}
+              style={[
+                styles.drawerItemStyle,
+                isActive('/usuarios/usuarios') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
+              ]}
             />
 
             <DrawerItem
               label="Meu Perfil"
               labelStyle={[
                 styles.drawerLabel, 
-                isActive('/perfil') && { color: '#3b82f6', fontWeight: 'bold' }
+                isActive('/perfil/perfil') && { color: '#3b82f6', fontWeight: 'bold' }
               ]}
               icon={({ size }) => (
-                <UserCircle size={size} color={isActive('/perfil') ? "#3b82f6" : "#94a3b8"} />
+                <UserCircle size={size} color={isActive('/perfil/perfil') ? "#3b82f6" : "#94a3b8"} />
               )}
               onPress={() => router.push('/perfil/perfil')}
               style={[
                 styles.drawerItemStyle,
-                isActive('/perfil') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
+                isActive('/perfil/perfil') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
               ]}
             />
 
@@ -183,7 +192,7 @@ function RootLayoutNav() {
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         screenOptions={{
           headerShown: false, 
-          drawerStyle: { backgroundColor: '#020617', width: 240 },
+          drawerStyle: { backgroundColor: '#020617', width: 260 },
           overlayColor: 'rgba(0,0,0,0.6)',
         }}
       >
@@ -194,7 +203,18 @@ function RootLayoutNav() {
         <Drawer.Screen 
           name="checklist/checklist" 
           options={{ 
-            title: 'Conferência Digital',
+            title: 'CONFERÊNCIA DIGITAL',
+            headerShown: true,
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: '900', fontSize: 16 },
+            headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 }
+          }} 
+        />
+
+        <Drawer.Screen 
+          name="usuarios/usuarios" 
+          options={{ 
+            title: 'GESTÃO DE USUÁRIOS',
             headerShown: true,
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: '900', fontSize: 16 },
@@ -205,12 +225,11 @@ function RootLayoutNav() {
         <Drawer.Screen 
           name="perfil/perfil" 
           options={{ 
-            title: 'Meu Perfil',
+            title: 'MEU PERFIL',
             headerShown: true,
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: '900', fontSize: 16 },
             headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 },
-            // AQUI ESTÁ A CORREÇÃO: Badge injetado via headerRight
             headerRight: () => (
               <View style={styles.badgeNivel}>
                 <Shield size={12} color="#3b82f6" />
@@ -255,8 +274,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(59, 130, 246, 0.3)'
   },
   logoutText: { color: '#fff', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 },
-  
-  // ESTILOS DO BADGE PARA O HEADER
   badgeNivel: { 
     flexDirection: 'row', 
     alignItems: 'center', 

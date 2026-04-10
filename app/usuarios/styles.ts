@@ -1,0 +1,135 @@
+import { StyleSheet, Platform } from "react-native";
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  headerInfo: {
+    padding: 20,
+    backgroundColor: "#020617",
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    paddingBottom: 40,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+  subtitle: {
+    fontSize: 12,
+    color: "#3B82F6",
+    fontWeight: "700",
+    textTransform: "uppercase",
+    marginTop: 4,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 15,
+    gap: 10,
+    marginTop: -25,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 15,
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#1E293B",
+    marginTop: 5,
+  },
+  statLabel: {
+    fontSize: 9,
+    color: "#94A3B8",
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  searchSection: {
+    paddingHorizontal: 20,
+    marginVertical: 15,
+  },
+  searchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    height: 48,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+    color: "#0F172A",
+  },
+  listContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  userCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 15,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    backgroundColor: "#F1F5F9",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  userInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#1E293B",
+  },
+  userRG: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#3B82F6",
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+  },
+  userEmail: {
+    fontSize: 11,
+    color: "#64748B",
+    marginTop: 2,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    gap: 5,
+    marginTop: 8,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  iconBtn: {
+    padding: 8,
+    borderRadius: 10,
+    backgroundColor: "#F1F5F9",
+  }
+});

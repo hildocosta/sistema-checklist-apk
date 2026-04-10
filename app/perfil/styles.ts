@@ -5,36 +5,55 @@ export const styles = StyleSheet.create({
     flex: 1, 
     backgroundColor: "#F8FAFC" 
   },
-  scrollContent: { 
-    padding: 15,
-    paddingBottom: 120 
+  // --- NOVO HEADER ESTILO USUÁRIOS ---
+  headerBackground: {
+    backgroundColor: "#020617",
+    paddingBottom: 60,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    alignItems: 'center',
+    paddingTop: 20,
   },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: "#3B82F6",
+    fontWeight: "700",
+    textTransform: "uppercase",
+    marginTop: 4,
+  },
+  // --- AVATAR FLUTUANTE ---
   avatarSection: { 
     alignItems: 'center', 
-    marginVertical: 20 
+    marginTop: -50, // Faz o avatar subir para cima do header escuro
+    marginBottom: 20
   },
   avatarContainer: { 
     position: 'relative', 
-    marginBottom: 15 
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
   },
   avatarCircle: { 
     width: 110, 
     height: 110, 
-    borderRadius: 30, 
+    borderRadius: 35, // Arredondamento moderno
     backgroundColor: '#fff', 
     alignItems: 'center', 
     justifyContent: 'center',
-    elevation: 4, 
-    shadowColor: '#000', 
-    shadowOpacity: 0.1, 
-    shadowRadius: 10,
     borderWidth: 4, 
     borderColor: '#fff'
   },
   avatarImg: { 
     width: '100%', 
     height: '100%', 
-    borderRadius: 26 
+    borderRadius: 30 
   },
   cameraBtn: { 
     position: 'absolute', 
@@ -50,9 +69,10 @@ export const styles = StyleSheet.create({
     borderColor: '#F8FAFC'
   },
   userName: { 
-    fontSize: 18, 
-    fontWeight: '800', 
-    color: '#1E293B' 
+    fontSize: 20, 
+    fontWeight: '900', 
+    color: '#1E293B',
+    marginTop: 10
   },
   userTag: { 
     fontSize: 12, 
@@ -61,25 +81,32 @@ export const styles = StyleSheet.create({
     marginTop: 2, 
     textTransform: 'uppercase' 
   },
+  // --- CONTEÚDO ---
+  scrollContent: { 
+    paddingBottom: 120 
+  },
+  cardsContainer: {
+    paddingHorizontal: 20,
+  },
   card: { 
     backgroundColor: '#fff', 
-    borderRadius: 20, 
-    padding: 16, 
-    marginBottom: 15,
-    elevation: 3, 
+    borderRadius: 24, 
+    padding: 20, 
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    // Sombra leve
     shadowColor: '#64748B', 
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08, 
-    shadowRadius: 8
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05, 
+    shadowRadius: 10,
+    elevation: 2,
   },
   cardHeader: { 
     flexDirection: 'row', 
     alignItems: 'center', 
     gap: 8, 
-    marginBottom: 15, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#F8FAFC', 
-    paddingBottom: 10 
+    marginBottom: 18, 
   },
   cardTitle: { 
     fontSize: 11, 
@@ -95,38 +122,30 @@ export const styles = StyleSheet.create({
     fontWeight: '800', 
     color: '#94A3B8', 
     marginBottom: 6, 
-    marginLeft: 2 
+    marginLeft: 4,
+    textTransform: 'uppercase'
   },
   inputWrapper: { 
     flexDirection: 'row', 
     alignItems: 'center', 
     backgroundColor: '#F1F5F9', 
-    borderRadius: 12, 
+    borderRadius: 14, 
     paddingHorizontal: 12, 
-    height: 48, 
+    height: 52, 
     borderWidth: 1, 
     borderColor: '#E2E8F0'
   },
-  lightInput: { 
-    backgroundColor: '#F8FAFC' 
-  },
-  disabledInput: { 
-    backgroundColor: '#F8FAFC', 
-    borderColor: '#F1F5F9' 
-  },
-  inputIcon: { 
-    marginRight: 10 
-  },
+  lightInput: { backgroundColor: '#F8FAFC' },
+  disabledInput: { backgroundColor: '#F8FAFC', borderColor: '#F1F5F9' },
+  inputIcon: { marginRight: 10 },
   input: { 
     flex: 1, 
     fontSize: 14, 
     color: '#1E293B', 
-    fontWeight: '600' 
+    fontWeight: '700' 
   },
-  row: { 
-    flexDirection: 'row', 
-    gap: 12 
-  },
+  row: { flexDirection: 'row', gap: 12 },
+  // --- FOOTER ---
   footerAction: { 
     position: 'absolute', 
     bottom: 0, 
@@ -155,7 +174,7 @@ export const styles = StyleSheet.create({
   saveButtonText: { 
     color: '#fff', 
     fontWeight: '800', 
-    fontSize: 13, 
-    letterSpacing: 0.5 
+    fontSize: 14, 
+    letterSpacing: 1 
   }
 });

@@ -4,9 +4,8 @@ import {
   FlatList, SafeAreaView, Platform, StatusBar, Alert,
   ScrollView, Animated, Easing, LayoutAnimation
 } from "react-native";
-import { ChevronRight, Search, CheckCircle2, Check } from 'lucide-react-native';
+import { ChevronRight, Search, CheckCircle2, Check, PackageCheck } from 'lucide-react-native';
 
-// Importe de dados e estilos
 import { DATABASE_INICIAL, InventarioItem } from "../../constants/data";
 import { styles } from "./styles";
 
@@ -33,9 +32,9 @@ export default function ChecklistRefinado() {
 
   const getLabel = (cat: string) => {
     const labels: Record<string, string> = {
-      armamento: "ARMAMENTOS", comunicacao: "RÁDIOS", equipamento: "EQUIPAMENTOS",
-      municao: "MUNIÇÕES", sade: "SADE (CEL/IMPR)", "acess sade": "ACESSÓRIOS",
-      taser: "TASER 10", veiculo: "VIATURAS"
+      armamento: "Armas", comunicacao: "Rádios", equipamento: "Equip.",
+      municao: "Munições", sade: "SADE", "acess sade": "Acess.",
+      taser: "Taser", veiculo: "VTR"
     };
     return labels[cat] || cat.toUpperCase();
   };
@@ -52,11 +51,10 @@ export default function ChecklistRefinado() {
 
   const handleCheck = (id: number) => {
     setItemSaindo(id);
-    
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 600,
-      easing: Easing.bezier(0.4, 0, 0.2, 1),
+      duration: 500,
+      easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start(() => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -66,33 +64,33 @@ export default function ChecklistRefinado() {
     });
   };
 
-  const updateItem = (id: number, field: keyof InventarioItem, value: string) => {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
-  };
-
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="light-content" backgroundColor="#020617" />
       
-      <SafeAreaView style={{ backgroundColor: '#fff' }}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>CARGA 17º BPM</Text>
-            <Text style={styles.headerSubtitle}>Conferência de Material</Text>
+      {/* HEADER DARK COM PROGRESSO */}
+      <View style={styles.headerBackground}>
+        <SafeAreaView>
+          <View style={styles.headerTop}>
+            <View>
+              <Text style={styles.headerTitle}>Carga 17º BPM</Text>
+              <Text style={styles.headerSubtitle}>Conferência de Material</Text>
+            </View>
+            <View style={styles.progressCircle}>
+              <Text style={styles.progressValue}>{progresso}%</Text>
+            </View>
           </View>
-          <View style={styles.progressCircle}>
-            <Text style={styles.progressValue}>{progresso}%</Text>
-          </View>
-        </View>
 
-        <View style={styles.statsRow}>
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: `${progresso}%` }]} />
+          <View style={styles.statsRow}>
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: `${progresso}%` }]} />
+            </View>
+            <Text style={styles.statsText}>{concluidosGeral} de {totalGeral} itens conferidos</Text>
           </View>
-          <Text style={styles.statsText}>{concluidosGeral} DE {totalGeral} ITENS CONCLUÍDOS</Text>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
 
+      {/* ABAS FLUTUANTES */}
       <View style={styles.filterSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
           {categorias.map(cat => {
@@ -115,11 +113,14 @@ export default function ChecklistRefinado() {
             );
           })}
         </ScrollView>
+      </View>
 
+      {/* BUSCA ESTILIZADA */}
+      <View style={styles.searchSection}>
         <View style={styles.searchContainer}>
-          <Search size={18} color="#94a3b8" style={styles.searchIcon} />
+          <Search size={20} color="#94a3b8" style={styles.searchIcon} />
           <TextInput
-            placeholder="Buscar Descrição..."
+            placeholder="Buscar por descrição ou série..."
             style={styles.searchInput}
             value={filtroTexto}
             onChangeText={setFiltroTexto}
@@ -128,10 +129,12 @@ export default function ChecklistRefinado() {
         </View>
       </View>
 
+      {/* LISTAGEM */}
       <FlatList
         data={itensFiltrados}
         keyExtractor={item => `${item.cat}-${item.id}`}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => {
           const isFinalizando = itemSaindo === item.id;
           return (
@@ -139,7 +142,7 @@ export default function ChecklistRefinado() {
               styles.card, 
               isFinalizando && { 
                 opacity: fadeAnim, 
-                transform: [{ scale: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }] 
+                transform: [{ scale: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] 
               }
             ]}>
               <View style={styles.cardMainRow}>
@@ -147,7 +150,7 @@ export default function ChecklistRefinado() {
                   <View style={styles.badgeRow}>
                     <View style={styles.qtdBadge}><Text style={styles.qtdText}>{item.qtd} UN</Text></View>
                     {item.pmpr && item.pmpr !== "----" && (
-                      <Text style={styles.pmprText}>{item.cat === 'veiculo' ? 'VTR' : 'PMPR'}: {item.pmpr}</Text>
+                      <Text style={styles.pmprText}>{item.cat === 'veiculo' ? 'VTR' : 'PMPR'} {item.pmpr}</Text>
                     )}
                     {item.serie && item.serie !== "----" && (
                       <Text style={styles.serieText}>SN: {item.serie}</Text>
@@ -161,22 +164,23 @@ export default function ChecklistRefinado() {
                   style={[styles.actionButton, isFinalizando && styles.actionButtonSuccess]} 
                   onPress={() => handleCheck(item.id)}
                 >
-                  {isFinalizando ? <Check size={24} color="#fff" /> : <ChevronRight size={24} color="#3b82f6" />}
+                  {isFinalizando ? <Check size={26} color="#fff" /> : <ChevronRight size={26} color="#3B82F6" />}
                 </TouchableOpacity>
               </View>
 
               <View style={styles.cardFooter}>
                 <TextInput 
-                  placeholder="Cautela/Obs" 
+                  placeholder="Cautela/Observação" 
                   style={styles.miniInput} 
                   value={item.cautela} 
-                  onChangeText={v => updateItem(item.id, 'cautela', v)}
+                  onChangeText={v => {/* update function */}}
+                  placeholderTextColor="#cbd5e1"
                 />
                 <TextInput 
                   placeholder="Pág" 
-                  style={[styles.miniInput, { flex: 0, width: 70 }]} 
+                  style={[styles.miniInput, { flex: 0, width: 60, textAlign: 'center' }]} 
                   value={item.pagLivro} 
-                  onChangeText={v => updateItem(item.id, 'pagLivro', v)}
+                  placeholderTextColor="#cbd5e1"
                 />
               </View>
             </Animated.View>
@@ -184,20 +188,21 @@ export default function ChecklistRefinado() {
         }}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <CheckCircle2 size={48} color="#10b981" />
-            <Text style={styles.emptyText}>Tudo pronto nesta categoria!</Text>
+            <PackageCheck size={60} color="#10b981" />
+            <Text style={styles.emptyText}>Conferência concluída para {getLabel(abaAtiva)}!</Text>
           </View>
         }
       />
 
+      {/* BOTÃO DE ENVIO */}
       <View style={styles.footerAction}>
         <TouchableOpacity 
           activeOpacity={0.8}
           style={[styles.sendButton, progresso < 100 && styles.sendButtonDisabled]}
-          onPress={() => progresso === 100 && Alert.alert("Sucesso", "Relatório enviado.")}
+          onPress={() => progresso === 100 && Alert.alert("Sucesso", "Checklist do 17º BPM enviado com sucesso.")}
         >
           <Text style={[styles.sendButtonText, progresso < 100 && styles.sendButtonTextDisabled]}>
-            {progresso === 100 ? "FINALIZAR RELATÓRIO" : `PENDENTE (${totalGeral - concluidosGeral})`}
+            {progresso === 100 ? "FINALIZAR E ENVIAR" : `PENDENTE: ${totalGeral - concluidosGeral} ITENS`}
           </Text>
         </TouchableOpacity>
       </View>
