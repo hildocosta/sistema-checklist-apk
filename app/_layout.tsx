@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -17,8 +17,8 @@ import {
   Users, 
   Power,
   UserCircle,
-  UserPlus,
-  Shield
+  Shield,
+  PlusCircle
 } from 'lucide-react-native';
 
 import { useColorScheme } from '@/components/useColorScheme';
@@ -37,8 +37,8 @@ function CustomDrawerContent(props: any) {
   const router = useRouter();
   const pathname = usePathname(); 
 
-  // Função para verificar se a rota está ativa (considerando subpastas)
-  const isActive = (path: string) => pathname.startsWith(path);
+  
+  const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#020617' }}>
@@ -48,14 +48,9 @@ function CustomDrawerContent(props: any) {
       >
         <View style={styles.centralizer}>
           
-          {/* CABEÇALHO */}
           <View style={styles.drawerHeader}>
             <View style={styles.logoContainer}>
-              <Image 
-                source={LogoBpm} 
-                style={styles.logoImage} 
-                resizeMode="contain" 
-              />
+              <Image source={LogoBpm} style={styles.logoImage} resizeMode="contain" />
             </View>
             <View>
               <Text style={styles.headerTitle}>17º BPM</Text>
@@ -63,90 +58,59 @@ function CustomDrawerContent(props: any) {
             </View>
           </View>
 
-          {/* DIVISOR */}
           <View style={styles.divider} />
 
-          {/* ITENS DO MENU */}
           <View style={styles.menuItemsContainer}>
             
             <DrawerItem
               label="Dashboard"
-              labelStyle={[
-                styles.drawerLabel, 
-                isActive('/(tabs)') && { color: '#3b82f6', fontWeight: 'bold' }
-              ]}
+              labelStyle={[styles.drawerLabel, isActive('/(tabs)') && styles.labelActive]}
               icon={({ size }) => (
                 <LayoutDashboard size={size} color={isActive('/(tabs)') ? "#3b82f6" : "#94a3b8"} />
               )}
               onPress={() => router.push('/(tabs)')}
-              style={[
-                styles.drawerItemStyle,
-                isActive('/(tabs)') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
-              ]}
+              style={[styles.drawerItemStyle, isActive('/(tabs)') && styles.itemActiveBackground]}
             />
             
             <DrawerItem
               label="Conferência"
-              labelStyle={[
-                styles.drawerLabel, 
-                isActive('/checklist/checklist') && { color: '#3b82f6', fontWeight: 'bold' }
-              ]}
+              labelStyle={[styles.drawerLabel, isActive('/checklist/checklist') && styles.labelActive]}
               icon={({ size }) => (
                 <ClipboardCheck size={size} color={isActive('/checklist/checklist') ? "#3b82f6" : "#94a3b8"} />
               )}
               onPress={() => router.push('/checklist/checklist')}
-              style={[
-                styles.drawerItemStyle,
-                isActive('/checklist/checklist') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
-              ]}
+              style={[styles.drawerItemStyle, isActive('/checklist/checklist') && styles.itemActiveBackground]}
             />
-            
+
+          
             <DrawerItem
-              label="Relatórios"
-              labelStyle={styles.drawerLabel}
-              icon={({ size }) => <BarChart3 size={size} color="#94a3b8" />}
-              onPress={() => console.log('Relatórios')}
-              style={styles.drawerItemStyle}
+              label="Novo Cadastro"
+              labelStyle={[styles.drawerLabel, isActive('/cadastrar/cadastrar') && styles.labelActive]}
+              icon={({ size }) => (
+                <PlusCircle size={size} color={isActive('/cadastrar/cadastrar') ? "#3b82f6" : "#94a3b8"} />
+              )}
+              onPress={() => router.push('/cadastrar/cadastrar')}
+              style={[styles.drawerItemStyle, isActive('/cadastrar/cadastrar') && styles.itemActiveBackground]}
             />
 
             <DrawerItem
               label="Usuários"
-              labelStyle={[
-                styles.drawerLabel, 
-                isActive('/usuarios/usuarios') && { color: '#3b82f6', fontWeight: 'bold' }
-              ]}
+              labelStyle={[styles.drawerLabel, isActive('/usuarios/usuarios') && styles.labelActive]}
               icon={({ size }) => (
                 <Users size={size} color={isActive('/usuarios/usuarios') ? "#3b82f6" : "#94a3b8"} />
               )}
               onPress={() => router.push('/usuarios/usuarios')}
-              style={[
-                styles.drawerItemStyle,
-                isActive('/usuarios/usuarios') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
-              ]}
+              style={[styles.drawerItemStyle, isActive('/usuarios/usuarios') && styles.itemActiveBackground]}
             />
 
             <DrawerItem
               label="Meu Perfil"
-              labelStyle={[
-                styles.drawerLabel, 
-                isActive('/perfil/perfil') && { color: '#3b82f6', fontWeight: 'bold' }
-              ]}
+              labelStyle={[styles.drawerLabel, isActive('/perfil/perfil') && styles.labelActive]}
               icon={({ size }) => (
                 <UserCircle size={size} color={isActive('/perfil/perfil') ? "#3b82f6" : "#94a3b8"} />
               )}
               onPress={() => router.push('/perfil/perfil')}
-              style={[
-                styles.drawerItemStyle,
-                isActive('/perfil/perfil') && { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
-              ]}
-            />
-
-            <DrawerItem
-              label="Cadastrar"
-              labelStyle={styles.drawerLabel}
-              icon={({ size }) => <UserPlus size={size} color="#94a3b8" />}
-              onPress={() => console.log('Cadastrar')}
-              style={styles.drawerItemStyle}
+              style={[styles.drawerItemStyle, isActive('/perfil/perfil') && styles.itemActiveBackground]}
             />
 
             <TouchableOpacity 
@@ -197,9 +161,20 @@ function RootLayoutNav() {
         }}
       >
         <Drawer.Screen name="index" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
-        <Drawer.Screen name="splash" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
-        <Drawer.Screen name="(tabs)" options={{ title: 'Painel' }} />
         
+       
+        <Drawer.Screen 
+          name="cadastrar/cadastrar" 
+          options={{ 
+            title: 'NOVO CADASTRO',
+            headerShown: true,
+            headerTintColor: '#fff',
+            headerTitleAlign: 'left',
+            headerTitleStyle: { fontWeight: '900', fontSize: 16 },
+            headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 }
+          }} 
+        />
+
         <Drawer.Screen 
           name="checklist/checklist" 
           options={{ 
@@ -245,13 +220,7 @@ function RootLayoutNav() {
 
 const styles = StyleSheet.create({
   centralizer: { justifyContent: 'center', flex: 1 },
-  drawerHeader: { 
-    paddingHorizontal: 24, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 12,
-    marginBottom: 10
-  },
+  drawerHeader: { paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   logoContainer: { width: 42, height: 42 },
   logoImage: { width: '100%', height: '100%' },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
@@ -260,6 +229,8 @@ const styles = StyleSheet.create({
   menuItemsContainer: { paddingHorizontal: 12 },
   drawerItemStyle: { marginVertical: 2, borderRadius: 8 }, 
   drawerLabel: { color: '#94a3b8', fontSize: 15, fontWeight: '500', marginLeft: 10 },
+  labelActive: { color: '#3b82f6', fontWeight: 'bold' },
+  itemActiveBackground: { backgroundColor: 'rgba(59, 130, 246, 0.1)' },
   logoutButtonInline: { 
     backgroundColor: '#1e3a8a', 
     flexDirection: 'row', 
@@ -286,10 +257,5 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: 'rgba(59, 130, 246, 0.3)' 
   },
-  badgeText: { 
-    fontSize: 10, 
-    fontWeight: '800', 
-    color: '#3B82F6',
-    textTransform: 'uppercase'
-  },
+  badgeText: { fontSize: 10, fontWeight: '800', color: '#3B82F6', textTransform: 'uppercase' },
 });
