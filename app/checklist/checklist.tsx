@@ -32,9 +32,9 @@ export default function ChecklistRefinado() {
 
   const getLabel = (cat: string) => {
     const labels: Record<string, string> = {
-      armamento: "Armas", comunicacao: "Rádios", equipamento: "Equip.",
-      municao: "Munições", sade: "SADE", "acess sade": "Acess.",
-      taser: "Taser", veiculo: "VTR"
+      armamento: "Armas", comunicacao: "Rádios", equipamento: "Equipamentos",
+      municao: "Munições", sade: "SADE", "acess sade": "Acessórios SADE",
+      taser: "Taser", veiculo: "Viaturas"
     };
     return labels[cat] || cat.toUpperCase();
   };
@@ -68,7 +68,6 @@ export default function ChecklistRefinado() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#020617" />
       
-      {/* HEADER DARK COM PROGRESSO */}
       <View style={styles.headerBackground}>
         <SafeAreaView>
           <View style={styles.headerTop}>
@@ -90,7 +89,7 @@ export default function ChecklistRefinado() {
         </SafeAreaView>
       </View>
 
-      {/* ABAS FLUTUANTES */}
+     
       <View style={styles.filterSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
           {categorias.map(cat => {
@@ -115,7 +114,7 @@ export default function ChecklistRefinado() {
         </ScrollView>
       </View>
 
-      {/* BUSCA ESTILIZADA */}
+      
       <View style={styles.searchSection}>
         <View style={styles.searchContainer}>
           <Search size={20} color="#94a3b8" style={styles.searchIcon} />
@@ -129,7 +128,7 @@ export default function ChecklistRefinado() {
         </View>
       </View>
 
-      {/* LISTAGEM */}
+      
       <FlatList
         data={itensFiltrados}
         keyExtractor={item => `${item.cat}-${item.id}`}
@@ -194,7 +193,7 @@ export default function ChecklistRefinado() {
         }
       />
 
-      {/* BOTÃO DE ENVIO */}
+      
       <View style={styles.footerAction}>
         <TouchableOpacity 
           activeOpacity={0.8}

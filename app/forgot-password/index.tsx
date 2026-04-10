@@ -13,10 +13,10 @@ import { useRouter, Stack } from "expo-router";
 import { ArrowLeft, MailCheck } from "lucide-react-native"; 
 import { StatusBar } from "expo-status-bar";
 
-// Importação dos estilos
+
 import { styles } from "./styles";
 
-// Componentes Customizados
+
 import { PrimaryButton } from "../../components/PrimaryButton"; 
 import { CustomInput } from "../../components/CustomInput";
 
@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
                     
                     <View style={styles.divider} />
 
-                    {/* AJUSTADO: Usando registerContainer e registerText que já existem no seu styles */}
+                   
                     <TouchableOpacity 
                       onPress={() => router.back()}
                       style={styles.registerContainer} 
@@ -147,7 +147,7 @@ export default function ForgotPasswordPage() {
                     onPress={() => setIsSubmitted(false)}
                     style={{ marginTop: 25 }}
                   >
-                    {/* AJUSTADO: Usando registerText que já existe */}
+                   
                     <Text style={[styles.registerText, { textDecorationLine: 'underline' }]}>
                       Tentar outro e-mail
                     </Text>

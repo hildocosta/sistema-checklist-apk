@@ -35,13 +35,13 @@ export default function ProfilePage() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* HEADER ESCURO IGUAL TELA USUÁRIOS */}
+          
           <View style={styles.headerBackground}>
             <Text style={styles.headerTitle}>Meu Perfil</Text>
             <Text style={styles.headerSubtitle}>Dados Cadastrais</Text>
           </View>
 
-          {/* SEÇÃO DO AVATAR FLUTUANTE */}
+         
           <View style={styles.avatarSection}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatarCircle}>
@@ -150,7 +150,7 @@ export default function ProfilePage() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* FOOTER FIXO */}
+      
       <View style={styles.footerAction}>
         <TouchableOpacity 
           activeOpacity={0.8}

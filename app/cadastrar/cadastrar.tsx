@@ -83,7 +83,7 @@ export default function CadastrarScreen() {
           {abaAtiva === "militar" ? (
             <View>
               <InputGroup label="Nome Completo" icon={User} placeholder="Ex: Anderson Silva" />
-              <InputGroup label="RG / RE" icon={Hash} placeholder="000.000-0" />
+              <InputGroup label="RG" icon={Hash} placeholder="000.000-0" />
               
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Posto/Graduação</Text>

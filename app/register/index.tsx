@@ -14,10 +14,9 @@ import { useRouter, Stack } from "expo-router";
 import { ArrowLeft } from "lucide-react-native"; 
 import { StatusBar } from "expo-status-bar";
 
-// Importação dos estilos
 import { styles } from "./styles";
 
-// Componentes Customizados
+
 import { PrimaryButton } from "../../components/PrimaryButton"; 
 import { CustomInput } from "../../components/CustomInput";
 

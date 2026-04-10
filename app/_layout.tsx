@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -13,12 +13,13 @@ import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { 
   LayoutDashboard, 
   ClipboardCheck, 
-  BarChart3, 
   Users, 
   Power,
   UserCircle,
   Shield,
-  PlusCircle
+  PlusCircle,
+  FileText,
+  Activity
 } from 'lucide-react-native';
 
 import { useColorScheme } from '@/components/useColorScheme';
@@ -37,7 +38,6 @@ function CustomDrawerContent(props: any) {
   const router = useRouter();
   const pathname = usePathname(); 
 
-  
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
   return (
@@ -62,14 +62,15 @@ function CustomDrawerContent(props: any) {
 
           <View style={styles.menuItemsContainer}>
             
+            {/* DASHBOARD - Rota: dashboard/dashboard */}
             <DrawerItem
               label="Dashboard"
-              labelStyle={[styles.drawerLabel, isActive('/(tabs)') && styles.labelActive]}
+              labelStyle={[styles.drawerLabel, isActive('/dashboard/dashboard') && styles.labelActive]}
               icon={({ size }) => (
-                <LayoutDashboard size={size} color={isActive('/(tabs)') ? "#3b82f6" : "#94a3b8"} />
+                <LayoutDashboard size={size} color={isActive('/dashboard/dashboard') ? "#3b82f6" : "#94a3b8"} />
               )}
-              onPress={() => router.push('/(tabs)')}
-              style={[styles.drawerItemStyle, isActive('/(tabs)') && styles.itemActiveBackground]}
+              onPress={() => router.push('/dashboard/dashboard')}
+              style={[styles.drawerItemStyle, isActive('/dashboard/dashboard') && styles.itemActiveBackground]}
             />
             
             <DrawerItem
@@ -82,7 +83,6 @@ function CustomDrawerContent(props: any) {
               style={[styles.drawerItemStyle, isActive('/checklist/checklist') && styles.itemActiveBackground]}
             />
 
-          
             <DrawerItem
               label="Novo Cadastro"
               labelStyle={[styles.drawerLabel, isActive('/cadastrar/cadastrar') && styles.labelActive]}
@@ -91,6 +91,16 @@ function CustomDrawerContent(props: any) {
               )}
               onPress={() => router.push('/cadastrar/cadastrar')}
               style={[styles.drawerItemStyle, isActive('/cadastrar/cadastrar') && styles.itemActiveBackground]}
+            />
+
+            <DrawerItem
+              label="Relatórios"
+              labelStyle={[styles.drawerLabel, isActive('/relatorios/relatorios') && styles.labelActive]}
+              icon={({ size }) => (
+                <FileText size={size} color={isActive('/relatorios/relatorios') ? "#3b82f6" : "#94a3b8"} />
+              )}
+              onPress={() => router.push('/relatorios/relatorios')}
+              style={[styles.drawerItemStyle, isActive('/relatorios/relatorios') && styles.itemActiveBackground]}
             />
 
             <DrawerItem
@@ -160,9 +170,40 @@ function RootLayoutNav() {
           overlayColor: 'rgba(0,0,0,0.6)',
         }}
       >
+        {/* LOGIN - Escondido do menu */}
         <Drawer.Screen name="index" options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} />
         
-       
+        {/* DASHBOARD - Configurado como tela principal com Header */}
+        <Drawer.Screen 
+          name="dashboard/dashboard" 
+          options={{ 
+            title: 'PAINEL DE CONTROLE',
+            headerShown: true,
+            headerTintColor: '#fff',
+            headerTitleAlign: 'left',
+            headerTitleStyle: { fontWeight: '900', fontSize: 16 },
+            headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 },
+            headerRight: () => (
+              <View style={[styles.badgeNivel, { borderColor: 'rgba(16, 185, 129, 0.3)', backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                <Activity size={12} color="#10b981" />
+                <Text style={[styles.badgeText, { color: '#10b981' }]}>LIVE</Text>
+              </View>
+            ),
+          }} 
+        />
+
+        <Drawer.Screen 
+          name="relatorios/relatorios" 
+          options={{ 
+            title: 'RELATÓRIOS',
+            headerShown: true,
+            headerTintColor: '#fff',
+            headerTitleAlign: 'left',
+            headerTitleStyle: { fontWeight: '900', fontSize: 16 },
+            headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 }
+          }} 
+        />
+
         <Drawer.Screen 
           name="cadastrar/cadastrar" 
           options={{ 

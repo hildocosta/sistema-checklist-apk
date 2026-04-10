@@ -9,7 +9,6 @@ import {
 } from "lucide-react-native";
 import { styles } from "./styles";
 
-// 1. Definição da Interface para evitar o erro 'never'
 interface Usuario {
   id: string;
   nome: string;
@@ -21,13 +20,13 @@ interface Usuario {
 }
 
 export default function UsuariosScreen() {
-  // 2. Tipagem do State como um array de Usuario
+  
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulação de carregamento de dados
+   
     const mockData: Usuario[] = [
       { id: '1', nome: 'SANTOS', posto: '3º SGT. QP PM', re: '123.456-7', email: 'santos@pm.pr.gov.br', nivel: 'Admin', status: 'Ativo' },
       { id: '2', nome: 'OLIVEIRA', posto: 'SD. QP PM', re: '987.654-3', email: 'oliveira@pm.pr.gov.br', nivel: 'Operador', status: 'Ativo' },
@@ -45,7 +44,7 @@ export default function UsuariosScreen() {
     u.re.includes(busca)
   );
 
-  // 3. Tipagem do item no renderItem
+  
   const renderUser = ({ item }: { item: Usuario }) => (
     <View style={styles.userCard}>
       <View style={styles.avatar}>
@@ -58,13 +57,13 @@ export default function UsuariosScreen() {
         <Text style={styles.userEmail} numberOfLines={1}>{item.email}</Text>
         
         <View style={styles.badgeRow}>
-          {/* Badge Nível */}
+          
           <View style={{ backgroundColor: item.nivel === 'Admin' ? '#EEF2FF' : '#F1F5F9', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
             <Text style={{ fontSize: 9, fontWeight: '900', color: item.nivel === 'Admin' ? '#3B82F6' : '#64748B' }}>
               {item.nivel.toUpperCase()}
             </Text>
           </View>
-          {/* Badge Status */}
+          
           <View style={{ backgroundColor: item.status === 'Ativo' ? '#ECFDF5' : '#FEF2F2', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
             <Text style={{ fontSize: 9, fontWeight: '900', color: item.status === 'Ativo' ? '#10B981' : '#EF4444' }}>
               {item.status.toUpperCase()}
@@ -92,13 +91,13 @@ export default function UsuariosScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      
       <View style={styles.headerInfo}>
         <Text style={styles.title}>Usuários</Text>
         <Text style={styles.subtitle}>Gestão de Acessos</Text>
       </View>
 
-      {/* Cards de Estatística */}
+      
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <ShieldCheck size={20} color="#3B82F6" />
@@ -123,7 +122,7 @@ export default function UsuariosScreen() {
         </View>
       </View>
 
-      {/* Busca */}
+     
       <View style={styles.searchSection}>
         <View style={styles.searchInputContainer}>
           <Search size={18} color="#94A3B8" />
