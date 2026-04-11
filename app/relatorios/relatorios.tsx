@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   View, 
   Text, 
   TouchableOpacity, 
   FlatList, 
-  Linking,
-  TextInput 
+  Linking, 
+  TextInput, 
+  Alert, 
+  RefreshControl 
 } from 'react-native';
-import { FileText, Search, Printer, ChevronRight, Calendar } from 'lucide-react-native';
+import { FileText, Search, Printer, ChevronRight, Calendar, Sun, Moon } from 'lucide-react-native';
 import { styles } from './styles';
-
-// Importação do Skeleton
+import api from "../../service/api";
 import HistorySkeleton from "../../components/HistorySkeleton";
 
 interface Relatorio {
@@ -24,51 +25,68 @@ interface Relatorio {
 
 export default function RelatoriosScreen() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [lista, setLista] = useState<Relatorio[]>([]);
   const [selecionado, setSelecionado] = useState<Relatorio | null>(null);
-  const [filtro, setFiltro] = useState("");
+  const [filtroData, setFiltroData] = useState("");
 
   const fetchRelatorios = async () => {
-    setIsLoading(true);
+    try {
+      const response = await api.get("/mobile/conferencia");
+      const dados = response.data;
 
-    setTimeout(() => {
-      const dadosSimulados: Relatorio[] = [
-        {
-          id: '1',
-          data: '10/05/2024',
-          hora: '08:30',
-          responsavel: 'SGT FURRIEL - 1ª CIA',
-          hash: 'BPM17-998877665544332211',
-          pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
-        },
-        {
-          id: '2',
-          data: '09/05/2024',
-          hora: '19:15',
-          responsavel: 'SGT MARCOS - 2ª CIA',
-          hash: 'BPM17-112233445566778899',
-          pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+      if (Array.isArray(dados)) {
+        setLista(dados);
+        if (dados.length > 0) {
+          setSelecionado(dados[0]);
+        } else {
+          setSelecionado(null);
         }
-      ];
-
-      setLista(dadosSimulados);
-      setSelecionado(dadosSimulados[0]);
+      }
+    } catch (error: any) {
+      Alert.alert("Erro de Conexão", "Não foi possível conectar ao servidor.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+      setIsRefreshing(false);
+    }
   };
 
   useEffect(() => {
     fetchRelatorios();
   }, []);
 
+  const onRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    fetchRelatorios();
+  }, []);
+
+  const listaFiltrada = useMemo(() => {
+    return lista.filter(item => {
+      const coincideData = filtroData === "" || (item.data && item.data.includes(filtroData));
+      return coincideData;
+    });
+  }, [lista, filtroData]);
+
   const abrirPdf = () => {
     if (selecionado?.pdfUrl) {
-      Linking.openURL(selecionado.pdfUrl);
+      Linking.openURL(selecionado.pdfUrl).catch(() => {
+        Alert.alert("Erro", "Não foi possível abrir o PDF.");
+      });
+    } else {
+      Alert.alert("Aviso", "PDF indisponível.");
     }
   };
 
   const renderItem = ({ item }: { item: Relatorio }) => {
     const isSelected = selecionado?.id === item.id;
+    
+    let isDiurno = true;
+    try {
+      const horaH = parseInt(item.hora.split(':')[0]);
+      isDiurno = horaH >= 6 && horaH < 18;
+    } catch (e) {
+      isDiurno = true;
+    }
 
     return (
       <TouchableOpacity 
@@ -78,12 +96,21 @@ export default function RelatoriosScreen() {
       >
         <View style={styles.infoContainer}>
           <View style={[styles.iconBox, isSelected && styles.iconBoxActive]}>
-            <FileText size={20} color={isSelected ? "#FFF" : "#3B82F6"} />
+            {isDiurno ? (
+              <Sun size={20} color={isSelected ? "#FFF" : "#F59E0B"} />
+            ) : (
+              <Moon size={20} color={isSelected ? "#FFF" : "#6366F1"} />
+            )}
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.dateLabel}>{item.data} • {item.hora}</Text>
-            <Text style={styles.nameLabel} numberOfLines={1}>{item.responsavel.split('-')[0]}</Text>
-            <Text style={styles.hashLabel} numberOfLines={1}>ID: {item.hash.substring(0, 16)}</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+               <Text style={styles.dateLabel}>{item.data} • {item.hora}</Text>
+               <Text style={{fontSize: 9, marginLeft: 6, color: isDiurno ? '#F59E0B' : '#6366F1', fontWeight: 'bold'}}>
+                  {isDiurno ? 'DIURNO' : 'NOTURNO'}
+               </Text>
+            </View>
+            <Text style={styles.nameLabel} numberOfLines={1}>{item.responsavel}</Text>
+            <Text style={styles.hashLabel} numberOfLines={1}>HASH: {item.hash?.split('-').pop()}</Text>
           </View>
         </View>
         <ChevronRight size={18} color={isSelected ? "#3B82F6" : "#CBD5E1"} />
@@ -91,16 +118,13 @@ export default function RelatoriosScreen() {
     );
   };
 
-  // Verificação de Loading com o Skeleton
-  if (isLoading) {
-    return <HistorySkeleton />;
-  }
+  if (isLoading) return <HistorySkeleton />;
 
   return (
     <View style={styles.container}>
       <View style={styles.headerBackground}>
-        <Text style={styles.headerTitle}>Histórico</Text>
-        <Text style={styles.headerSubtitle}>Arquivo de Conferências</Text>
+        <Text style={styles.headerTitle}>Histórico Geral</Text>
+        <Text style={styles.headerSubtitle}>{lista.length} conferências registradas</Text>
       </View>
 
       <View style={styles.searchSection}>
@@ -108,24 +132,25 @@ export default function RelatoriosScreen() {
           <Calendar size={20} color="#94A3B8" />
           <TextInput 
             style={styles.dateInput}
-            placeholder="Filtrar por data (DD/MM/AAAA)"
+            placeholder="Filtrar data (ex: 11/04)"
             placeholderTextColor="#94A3B8"
-            value={filtro}
-            onChangeText={setFiltro}
+            value={filtroData}
+            onChangeText={setFiltroData}
           />
           <Search size={20} color="#3B82F6" />
         </View>
       </View>
 
       <FlatList
-        data={lista}
+        data={listaFiltrada}
         renderItem={renderItem}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id ? item.id.toString() : Math.random().toString()}
         contentContainerStyle={styles.listContent}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={
-          <Text style={{ textAlign: 'center', marginTop: 50, color: '#94A3B8' }}>
-            Nenhum relatório encontrado.
-          </Text>
+          <View style={{ alignItems: 'center', marginTop: 50 }}>
+             <Text style={{ color: '#94A3B8' }}>Nenhum relatório nesta data.</Text>
+          </View>
         }
       />
 
@@ -136,7 +161,7 @@ export default function RelatoriosScreen() {
           disabled={!selecionado}
         >
           <Printer size={18} color="#FFF" />
-          <Text style={styles.btnImprimirText}>VER DOCUMENTO PDF</Text>
+          <Text style={styles.btnImprimirText}>ABRIR RELATÓRIO</Text>
         </TouchableOpacity>
       </View>
     </View>
