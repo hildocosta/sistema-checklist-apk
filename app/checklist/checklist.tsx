@@ -8,6 +8,7 @@ import {
 import { ChevronRight, Search, PackageCheck, Send } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 
 import { DATABASE_INICIAL, InventarioItem } from "../../constants/data";
 import ChecklistSkeleton from "../../components/ChecklistSkeleton";
@@ -17,8 +18,10 @@ import { styles } from "./styles";
 
 export default function ChecklistRefinado() {
   const { user } = useAuth(); 
+  const navigation = useNavigation();
+  
   const [isLoading, setIsLoading] = useState(true);
-  const [items, setItems] = useState<InventarioItem[]>(DATABASE_INICIAL);
+  const [items, setItems] = useState<InventarioItem[]>(JSON.parse(JSON.stringify(DATABASE_INICIAL)));
   const [abaAtiva, setAbaAtiva] = useState("armamento"); 
   const [filtroTexto, setFiltroTexto] = useState("");
   const [itemSaindo, setItemSaindo] = useState<number | null>(null);
@@ -94,35 +97,36 @@ export default function ChecklistRefinado() {
       if (itensDaCat.length === 0) return '';
 
       return `
-        <div style="page-break-inside: avoid; margin-bottom: 15px;">
-          <div style="background-color: #f1f5f9; padding: 6px; border: 1px solid #000; font-weight: bold; font-size: 11px; text-transform: uppercase;">
+        <div class="category-block">
+          <div class="category-header">
             ${cat.label} (${itensDaCat.length} ITENS)
           </div>
-          <table style="width: 100%; border-collapse: collapse;">
+          <table class="main-table">
             <thead>
-              <tr style="background-color: #0f172a; color: #ffffff;">
-                <th style="border: 1px solid #000; padding: 5px; font-size: 9px; width: 30px;">ORD</th>
-                <th style="border: 1px solid #000; padding: 5px; font-size: 9px; width: 35px;">QTD</th>
-                <th style="border: 1px solid #000; padding: 5px; font-size: 9px; text-align: left;">ESPECIFICAÇÃO / SÉRIE</th>
-                <th style="border: 1px solid #000; padding: 5px; font-size: 9px; width: 70px;">PMPR</th>
-                <th style="border: 1px solid #000; padding: 5px; font-size: 9px;">OBS / CAUTELA</th>
-                <th style="border: 1px solid #000; padding: 5px; font-size: 9px; width: 40px;">CONF.</th>
+              <tr>
+                <th style="width: 35px;">ORD</th>
+                <th style="width: 40px;">QTD</th>
+                <th style="text-align: left;">ESPECIFICAÇÃO / SÉRIE</th>
+                <th style="width: 100px;">PMPR</th>
+                <th style="width: 120px;">OBS / CAUTELA</th>
+                <th style="width: 45px;">CONF.</th>
               </tr>
             </thead>
             <tbody>
               ${itensDaCat.map((item, index) => `
-                <tr style="page-break-inside: avoid;">
-                  <td style="border: 1px solid #000; padding: 4px; font-size: 8.5px; text-align: center;">${(index + 1).toString().padStart(2, '0')}</td>
-                  <td style="border: 1px solid #000; padding: 4px; font-size: 8.5px; text-align: center;">${item.qtd}</td>
-                  <td style="border: 1px solid #000; padding: 4px; font-size: 8.5px;">
-                    <div style="font-weight: bold; text-transform: uppercase;">${item.desc}</div>
-                    <div style="font-size: 7px; color: #444;">S/N: ${item.serie || '---'}</div>
+                <tr>
+                  <td style="text-align: center;">${(index + 1).toString().padStart(2, '0')}</td>
+                  <td style="text-align: center;">${item.qtd}</td>
+                  <td>
+                    <div class="item-desc">${item.desc}</div>
+                    <div class="item-sn">S/N: ${item.serie && item.serie !== '----' ? item.serie : '---'}</div>
                   </td>
-                  <td style="border: 1px solid #000; padding: 4px; font-size: 8.5px; text-align: center;">${item.pmpr && item.pmpr !== '----' ? item.pmpr : ''}</td>
-                  <td style="border: 1px solid #000; padding: 4px; font-size: 8.5px; text-transform: uppercase;">
-                    ${item.cautela || 'DISPONÍVEL'} ${item.pagLivro ? `<br/><span style="font-size: 7px;">PÁG: ${item.pagLivro}</span>` : ''}
+                  <td style="text-align: center;">${item.pmpr && item.pmpr !== '----' ? item.pmpr : '---'}</td>
+                  <td style="text-transform: uppercase;">
+                    ${item.cautela ? `<strong>${item.cautela}</strong>` : 'DISPONÍVEL'}
+                    ${item.pagLivro ? `<br/><span class="item-sn">LIVRO PÁG: ${item.pagLivro}</span>` : ''}
                   </td>
-                  <td style="border: 1px solid #000; padding: 4px; font-size: 8.5px; text-align: center; font-weight: bold; color: #059669;">OK</td>
+                  <td class="conf-ok">OK</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -135,20 +139,31 @@ export default function ChecklistRefinado() {
       <html>
         <head>
           <style>
-            @page { margin: 30px; size: A4; }
-            body { font-family: 'Helvetica', sans-serif; color: #000; line-height: 1.2; }
-            .header-container { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+            @page { margin: 35px; size: A4; }
+            body { font-family: 'Helvetica', sans-serif; color: #000; line-height: 1.2; padding: 0; margin: 0; }
+            .header-container { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
             .header-pmpr { font-size: 11px; font-weight: bold; text-transform: uppercase; }
-            .doc-title { font-size: 14px; font-weight: bold; text-decoration: underline; margin: 10px 0; text-transform: uppercase; background-color: #eee; padding: 5px; }
-            .info-box { font-size: 10px; border: 1px solid #000; padding: 8px; margin-bottom: 15px; background-color: #fafafa; }
-            .footer-table { width: 100%; border: none; margin-top: 30px; }
-            .signature-side { text-align: center; font-size: 10px; vertical-align: bottom; padding-bottom: 10px; }
-            .qrcode-img { width: 85px; height: 85px; border: 1px solid #ccc; }
+            .doc-title { font-size: 14px; font-weight: bold; margin: 10px 0; text-transform: uppercase; background-color: #eee; padding: 6px; border: 1px solid #000; }
+            .info-box { font-size: 10px; border: 1px solid #000; padding: 8px; margin-bottom: 20px; background-color: #fafafa; }
+            
+            /* Ajuste de Alinhamento das Tabelas */
+            .category-block { page-break-inside: avoid; margin-bottom: 20px; }
+            .category-header { background-color: #f1f5f9; padding: 6px; border: 1px solid #000; border-bottom: none; font-weight: bold; font-size: 10px; }
+            .main-table { width: 100%; border-collapse: collapse; table-layout: fixed; } /* O fixed força o alinhamento */
+            .main-table th { background-color: #0f172a; color: #ffffff; border: 1px solid #000; padding: 6px; font-size: 9px; text-transform: uppercase; }
+            .main-table td { border: 1px solid #000; padding: 5px; font-size: 8.5px; word-wrap: break-word; vertical-align: middle; }
+            
+            .item-desc { font-weight: bold; text-transform: uppercase; }
+            .item-sn { font-size: 7px; color: #444; margin-top: 2px; }
+            .conf-ok { text-align: center; font-weight: bold; color: #059669; }
+
+            .footer-table { width: 100%; margin-top: 40px; border-top: 1px solid #ccc; padding-top: 15px; }
+            .signature-side { text-align: center; font-size: 10px; }
+            .qrcode-img { width: 80px; height: 80px; }
           </style>
         </head>
         <body>
-          <div style="text-align: right; font-size: 8px;">Gerado em: ${dataFormatada} às ${horaFormatada.substring(0,5)}</div>
-          
+          <div style="text-align: right; font-size: 8px; margin-bottom: 5px;">Gerado em: ${dataFormatada} às ${horaFormatada.substring(0,5)}</div>
           <div class="header-container">
             <div class="header-pmpr">
               POLÍCIA MILITAR DO PARANÁ<br/>
@@ -158,27 +173,25 @@ export default function ChecklistRefinado() {
             </div>
             <div class="doc-title">RELATÓRIO DIÁRIO DE CONFERÊNCIA DE CARGA</div>
           </div>
-
           <div class="info-box">
             <strong>RESPONSÁVEL:</strong> ${user?.posto || ''} ${user?.name || 'MILITAR'} | 
             <strong>RG:</strong> ${user?.re || '---'} |
             <strong>UNIDADE:</strong> 17º BPM
           </div>
-
+          
           ${htmlTabelas}
 
           <div style="page-break-inside: avoid;">
             <table class="footer-table">
               <tr>
                 <td class="signature-side" style="width: 70%;">
-                  <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 5px;">
-                    <strong>Assinatura Digital do Responsável</strong><br/>
-                    <span style="font-size: 8px;">Autenticação: ${hashUnico}</span>
-                  </div>
+                  <div style="border-top: 1px solid #000; width: 280px; margin: 40px auto 5px auto;"></div>
+                  <strong>Assinatura Digital do Responsável</strong><br/>
+                  <span style="font-size: 8px; color: #666;">ID: ${hashUnico}</span>
                 </td>
                 <td style="width: 30%; text-align: right;">
-                  <img src="${qrCodeUrl}" class="qrcode-img" />
-                  <div style="font-size: 7px; color: #666;">Valide a integridade via QR Code</div>
+                  <img src="${qrCodeUrl}" class="qrcode-img" /><br/>
+                  <span style="font-size: 7px; color: #666;">Autenticidade Garantida</span>
                 </td>
               </tr>
             </table>
@@ -204,33 +217,50 @@ export default function ChecklistRefinado() {
       const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${hashUnico}`;
 
       const htmlContent = gerarHTMLParaPDF(dataFormatada, horaFormatada, hashUnico, qrCodeUrl);
-      
-      // Gera o arquivo PDF
       const { uri, base64 } = await Print.printToFileAsync({ html: htmlContent, base64: true });
 
-      // Pergunta ao utilizador se quer ver antes de enviar
       Alert.alert(
         "Relatório Gerado", 
-        "Deseja visualizar o PDF antes de confirmar o envio para a Furrielaria?",
+        "Conferência concluída com sucesso. Como deseja proceder?",
         [
-          { text: "Ver PDF", onPress: () => Sharing.shareAsync(uri) },
+          { text: "Visualizar PDF", onPress: () => Sharing.shareAsync(uri) },
           { 
-            text: "Confirmar e Enviar", 
+            text: "Enviar para Furrielaria", 
             style: 'default',
             onPress: async () => {
-              const payload = {
-                pdfBase64: `data:application/pdf;base64,${base64}`,
-                fileName: `Checklist_17BPM_${user?.re}_${Date.now()}.pdf`,
-                data: dataFormatada,
-                hora: horaFormatada,
-                hash: hashUnico,
-                responsavel: `${user?.posto || ''} ${user?.name || 'Militar'}`.trim(),
-                itens: items,
-              };
+              try {
+                const payload = {
+                  pdfBase64: `data:application/pdf;base64,${base64}`,
+                  fileName: `Checklist_17BPM_${user?.re}_${Date.now()}.pdf`,
+                  data: dataFormatada,
+                  hora: horaFormatada,
+                  hash: hashUnico,
+                  responsavel: `${user?.posto || ''} ${user?.name || 'Militar'}`.trim(),
+                  itens: items,
+                };
 
-              const response = await api.post("/mobile/conferencia", payload);
-              if (response.status === 201 || response.status === 200) {
-                Alert.alert("Sucesso", "Checklist enviado com sucesso!");
+                const response = await api.post("/mobile/conferencia", payload);
+                
+                if (response.status === 201 || response.status === 200) {
+                  Alert.alert("Enviado!", "O relatório foi protocolado no sistema do 17º BPM.", [
+                    {
+                      text: "OK",
+                      onPress: () => {
+                        setItems(JSON.parse(JSON.stringify(DATABASE_INICIAL)));
+                        setAbaAtiva("armamento");
+                        setFiltroTexto("");
+                        navigation.dispatch(
+                          CommonActions.reset({
+                            index: 0,
+                            routes: [{ name: 'dashboard/dashboard' }], 
+                          })
+                        );
+                      }
+                    }
+                  ]);
+                }
+              } catch (err) {
+                Alert.alert("Erro de Conexão", "O relatório foi gerado, mas não pôde ser enviado ao servidor. Verifique sua internet.");
               }
             }
           },
@@ -239,7 +269,6 @@ export default function ChecklistRefinado() {
       );
 
     } catch (error: any) {
-      console.error("❌ Erro:", error);
       Alert.alert("Erro", "Falha ao processar o arquivo PDF.");
     } finally {
       setEnviando(false);
@@ -268,7 +297,7 @@ export default function ChecklistRefinado() {
             <View style={styles.progressBarBg}>
               <View style={[styles.progressBarFill, { width: `${progresso}%` }]} />
             </View>
-            <Text style={styles.statsText}>{concluidosGeral} de {totalGeral} conferidos</Text>
+            <Text style={styles.statsText}>{concluidosGeral} de {totalGeral} itens</Text>
           </View>
         </SafeAreaView>
       </View>
@@ -301,7 +330,7 @@ export default function ChecklistRefinado() {
         <View style={styles.searchContainer}>
           <Search size={20} color="#94a3b8" style={styles.searchIcon} />
           <TextInput
-            placeholder="Buscar por descrição ou série..."
+            placeholder="Buscar descrição, PMPR ou série..."
             style={styles.searchInput}
             value={filtroTexto}
             onChangeText={setFiltroTexto}
@@ -331,11 +360,11 @@ export default function ChecklistRefinado() {
                     {item.pmpr && item.pmpr !== "----" && (
                       <Text style={styles.pmprText}>{item.cat === 'veiculo' ? 'VTR' : 'PMPR'} {item.pmpr}</Text>
                     )}
-                    {item.serie && item.serie !== "----" && (
-                      <Text style={styles.serieText}>SN: {item.serie}</Text>
-                    )}
                   </View>
                   <Text style={styles.itemDesc}>{item.desc}</Text>
+                  {item.serie && item.serie !== "----" && (
+                    <Text style={styles.serieText}>Série: {item.serie}</Text>
+                  )}
                 </View>
 
                 <TouchableOpacity 
@@ -349,7 +378,7 @@ export default function ChecklistRefinado() {
 
               <View style={styles.cardFooter}>
                 <TextInput 
-                  placeholder="Cautela/Observação" 
+                  placeholder="Cautela / Observação" 
                   style={styles.miniInput} 
                   onChangeText={(text) => atualizarCampoItem(item.id, 'cautela', text)}
                   value={item.cautela} 
@@ -370,7 +399,7 @@ export default function ChecklistRefinado() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <PackageCheck size={60} color="#10b981" />
-            <Text style={styles.emptyText}>Conferência concluída para {getLabel(abaAtiva)}!</Text>
+            <Text style={styles.emptyText}>Categoria {getLabel(abaAtiva)} Conferida!</Text>
           </View>
         }
       />
@@ -386,9 +415,9 @@ export default function ChecklistRefinado() {
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-               {progresso === 100 ? <Send size={20} color="#fff" /> : null}
+               {progresso === 100 && <Send size={20} color="#fff" style={{marginRight: 8}} />}
                <Text style={styles.sendButtonText}>
-                {progresso === 100 ? "GERAR RELATÓRIO E ENVIAR" : `PENDENTE: ${totalGeral - concluidosGeral} ITENS`}
+                {progresso === 100 ? "GERAR E ENVIAR RELATÓRIO" : `PENDENTE: ${totalGeral - concluidosGeral} ITENS`}
               </Text>
             </>
           )}
