@@ -7,7 +7,7 @@ import {
 } from "react-native";
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, Search, PackageCheck, Send } from 'lucide-react-native';
+import { ChevronRight, Search, PackageCheck, Send, AlertCircle } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -39,16 +39,17 @@ export default function ChecklistRefinado() {
   const totalGeral = items.length;
   const concluidosGeral = items.filter(i => i.status === "ok").length;
   const progresso = totalGeral > 0 ? Math.round((concluidosGeral / totalGeral) * 100) : 0;
+  const itensFaltantes = totalGeral - concluidosGeral;
 
   const categoriasOrd = [
     { id: 'armamento', label: 'ARMAS' },
     { id: 'municao', label: 'MUNIÇÕES' },
     { id: 'taser', label: 'TASER' },
-    { id: 'equipamento', label: 'EQUIP' },
+    { id: 'equipamento', label: 'EQUIPAMENTOS' },
     { id: 'comunicacao', label: 'RÁDIOS' },
     { id: 'veiculo', label: 'VIATURAS' },
     { id: 'sade', label: 'SADE' },
-    { id: 'acess sade', label: 'ACES SADE' }
+    { id: 'acess sade', label: 'ACESS SADE' }
   ];
 
   const getContagem = (catId: string) => {
@@ -95,21 +96,17 @@ export default function ChecklistRefinado() {
 
   const getQRCodeBase64 = async (hash: string) => {
     try {
-      const url = `https://quickchart.io/qr?text=${encodeURIComponent(hash)}&size=150&margin=1`;
-      const response = await fetch(url);
+      const urlValidacao = `https://sistema-checklist-frontend.vercel.app/validar/${hash}`;
+      const apiUrl = `https://quickchart.io/qr?text=${encodeURIComponent(urlValidacao)}&size=150&margin=1`;
       
-      if (!response.ok) {
-        return null; 
-      }
+      const response = await fetch(apiUrl);
+      if (!response.ok) return null;
 
       const blob = await response.blob();
-
       return new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => {
-          resolve(""); 
-        };
+        reader.onerror = () => resolve("");
         reader.readAsDataURL(blob);
       });
     } catch (error) {
@@ -179,7 +176,9 @@ export default function ChecklistRefinado() {
             .conf-ok { text-align: center; font-weight: bold; color: #059669; }
             .footer-table { width: 100%; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; }
             .signature-side { text-align: center; font-size: 9px; }
-            .qrcode-img { width: 70px; height: 70px; }
+            .qrcode-container { text-align: center; display: flex; flex-direction: column; align-items: center; }
+            .qrcode-img { width: 85px; height: 85px; }
+            .qrcode-label { font-size: 6px; font-weight: bold; margin-top: 2px; color: #444; }
           </style>
         </head>
         <body>
@@ -205,8 +204,13 @@ export default function ChecklistRefinado() {
                   <div style="border-top: 1px solid #000; width: 250px; margin: 30px auto 5px auto;"></div>
                   <strong>Assinatura Digital</strong><br/><span style="font-size: 7px;">ID: ${hashUnico}</span>
                 </td>
-                <td style="width: 30%; text-align: right;">
-                  ${qrCodeBase64 ? `<img src="${qrCodeBase64}" class="qrcode-img" />` : '<div style="font-size:8px">QR Code Indisponível</div>'}
+                <td style="width: 30%;">
+                  <div class="qrcode-container">
+                    ${qrCodeBase64 ? `
+                      <img src="${qrCodeBase64}" class="qrcode-img" />
+                      <div class="qrcode-label">ESCANEIE PARA VALIDAR</div>
+                    ` : '<div style="font-size:8px">QR Code Indisponível</div>'}
+                  </div>
                 </td>
               </tr>
             </table>
@@ -218,7 +222,7 @@ export default function ChecklistRefinado() {
 
   const finalizarEEnviar = async () => {
     if (progresso < 100) {
-      Alert.alert("Atenção", "Conclua a conferência de todos os itens.");
+      Alert.alert("Atenção", "Conclua a conferência de todos os itens antes de gerar o relatório.");
       return;
     }
 
@@ -231,12 +235,7 @@ export default function ChecklistRefinado() {
       const hashUnico = `CHECK-${user?.re || '000'}-${Date.now()}`;
       
       let qrCodeBase64 = await getQRCodeBase64(hashUnico);
-      
-      if (!qrCodeBase64) {
-        qrCodeBase64 = ""; 
-      }
-
-      const htmlContent = gerarHTMLParaPDF(dataFormatada, horaFormatada, hashUnico, qrCodeBase64);
+      const htmlContent = gerarHTMLParaPDF(dataFormatada, horaFormatada, hashUnico, qrCodeBase64 || "");
 
       await new Promise(r => setTimeout(r, 400));
 
@@ -416,17 +415,30 @@ export default function ChecklistRefinado() {
         <TouchableOpacity 
           activeOpacity={0.8}
           disabled={enviando}
-          style={[styles.sendButton, (progresso < 100) && styles.sendButtonDisabled]}
+          style={[
+            styles.sendButton, 
+            
+            progresso < 100 && { backgroundColor: '#334155', opacity: 1 } 
+          ]}
           onPress={finalizarEEnviar}
         >
           {enviando ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-               {progresso === 100 && <Send size={20} color="#fff" style={{marginRight: 8}} />}
-               <Text style={styles.sendButtonText}>
-                {progresso === 100 ? "GERAR E ENVIAR RELATÓRIO" : `PENDENTE: ${totalGeral - concluidosGeral} ITENS`}
-              </Text>
+              {progresso === 100 ? (
+                <>
+                  <Send size={20} color="#fff" style={{marginRight: 8}} />
+                  <Text style={styles.sendButtonText}>GERAR E ENVIAR RELATÓRIO</Text>
+                </>
+              ) : (
+                <>
+                  <AlertCircle size={20} color="#fff" style={{marginRight: 8}} />
+                  <Text style={styles.sendButtonText}>
+                    PENDENTE: {itensFaltantes} {itensFaltantes === 1 ? 'ITEM' : 'ITENS'}
+                  </Text>
+                </>
+              )}
             </>
           )}
         </TouchableOpacity>
