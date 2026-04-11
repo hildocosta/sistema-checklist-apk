@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { 
   View, Text, TouchableOpacity, TextInput, Image, 
-  ScrollView, Platform, StatusBar, KeyboardAvoidingView, Alert 
+  ScrollView, Platform, StatusBar, KeyboardAvoidingView, Alert, ActivityIndicator 
 } from "react-native";
 import { 
   User, Mail, Camera, Save, 
   Award, Building2, Phone, Hash, MapPin 
 } from "lucide-react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 import { useAuth } from "../../context/AuthContext";
 import ProfileSkeleton from "../../components/ProfileSkeleton"; 
@@ -17,6 +18,7 @@ import { styles } from "./styles";
 export default function ProfilePage() {
   const { user, setUser, loading } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [name, setName] = useState("");
   const [re, setRe] = useState("");
@@ -25,6 +27,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("");
   const [setor, setSetor] = useState("");
   const [unidade, setUnidade] = useState("");
+  const [image, setImage] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -36,8 +39,32 @@ export default function ProfilePage() {
       setEmail(userData.email || "");
       setSetor(userData.setor || "");
       setUnidade(userData.unidade || "17º BPM");
+      setImage(userData.image || "");
     }
   }, [user]);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert("Permissão necessária", "Precisamos de acesso à sua galeria para alterar a foto.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+      base64: true, 
+    });
+
+    if (!result.canceled) {
+      
+      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      setImage(base64Image);
+    }
+  };
 
   const handleSave = async () => {
     if (!name || !re) {
@@ -47,13 +74,22 @@ export default function ProfilePage() {
     setIsSaving(true);
     try {
       const userData = user?.user || user;
+      
+      
       const response = await api.post("/mobile/update-profile", {
         id: userData.id,
-        name, re, posto, telefone, email, setor, unidade
+        name, 
+        re, 
+        posto, 
+        telefone, 
+        email, 
+        setor, 
+        unidade,
+        image 
       });
 
       if (response.status === 200) {
-        const updatedData = { ...userData, name, re, posto, telefone, email, setor, unidade };
+        const updatedData = { ...userData, name, re, posto, telefone, email, setor, unidade, image };
         setUser(updatedData);
         await AsyncStorage.setItem('@BPM17:user', JSON.stringify(updatedData));
         Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
@@ -87,13 +123,17 @@ export default function ProfilePage() {
           <View style={styles.avatarSection}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatarCircle}>
-                {user?.image ? (
-                  <Image source={{ uri: user.image }} style={styles.avatarImg} />
+                {image ? (
+                  <Image source={{ uri: image }} style={styles.avatarImg} />
                 ) : (
                   <User size={50} color="#cbd5e1" />
                 )}
               </View>
-              <TouchableOpacity style={styles.cameraBtn} activeOpacity={0.8}>
+              <TouchableOpacity 
+                style={styles.cameraBtn} 
+                activeOpacity={0.8}
+                onPress={pickImage}
+              >
                 <Camera size={18} color="#fff" />
               </TouchableOpacity>
             </View>
@@ -205,7 +245,11 @@ export default function ProfilePage() {
           onPress={handleSave}
           disabled={isSaving}
         >
-          <Save size={18} color="#fff" style={{ marginRight: 8 }} />
+          {isSaving ? (
+            <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
+          ) : (
+            <Save size={18} color="#fff" style={{ marginRight: 8 }} />
+          )}
           <Text style={styles.saveButtonText}>
             {isSaving ? "SALVANDO..." : "SALVAR ALTERAÇÕES"}
           </Text>

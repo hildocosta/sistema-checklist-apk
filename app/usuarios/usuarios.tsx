@@ -1,61 +1,79 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { 
   View, Text, FlatList, TextInput, TouchableOpacity, 
-  Alert, StatusBar, SafeAreaView 
+  Alert, StatusBar, SafeAreaView, Image, RefreshControl 
 } from "react-native";
 import { 
   ShieldCheck, User, ShieldAlert, Search, 
-  Edit3, Trash2 
+  Edit3, Trash2, RefreshCw 
 } from "lucide-react-native";
 
 import UsersSkeleton from "../../components/UsersSkeleton";
+import api from "../../service/api";
 import { styles } from "./styles";
 
 interface Usuario {
   id: string;
-  nome: string;
+  name: string; // Ajustado para 'name' (Prisma)
   posto: string;
   re: string;
   email: string;
   nivel: string;
-  status: string;
+  image?: string; // Campo de imagem que salvamos
+  status?: string; // Caso você tenha esse campo no banco
 }
 
 export default function UsuariosScreen() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Função para buscar dados da API
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await api.get("/mobile/users");
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro", "Não foi possível carregar a lista de militares.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const mockData: Usuario[] = [
-      { id: '1', nome: 'SANTOS', posto: '3º SGT. QP PM', re: '123.456-7', email: 'santos@pm.pr.gov.br', nivel: 'Admin', status: 'Ativo' },
-      { id: '2', nome: 'OLIVEIRA', posto: 'SD. QP PM', re: '987.654-3', email: 'oliveira@pm.pr.gov.br', nivel: 'Operador', status: 'Ativo' },
-      { id: '3', nome: 'SILVA', posto: 'CB. QP PM', re: '456.789-0', email: 'silva@pm.pr.gov.br', nivel: 'Operador', status: 'Inativo' },
-    ];
+    fetchUsers();
+  }, [fetchUsers]);
 
-    const timer = setTimeout(() => {
-      setUsuarios(mockData);
-      setLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchUsers();
+  };
 
   const usuariosFiltrados = useMemo(() => {
     return usuarios.filter(u => 
-      u.nome.toLowerCase().includes(busca.toLowerCase()) || 
-      u.re.includes(busca)
+      (u.name?.toLowerCase() || "").includes(busca.toLowerCase()) || 
+      (u.re || "").includes(busca)
     );
   }, [busca, usuarios]);
 
   const renderUser = ({ item }: { item: Usuario }) => (
     <View style={styles.userCard}>
       <View style={styles.avatar}>
-        <User size={24} color="#94A3B8" />
+        {item.image ? (
+          <Image 
+            source={{ uri: item.image }} 
+            style={{ width: '100%', height: '100%', borderRadius: 20 }} 
+          />
+        ) : (
+          <User size={24} color="#94A3B8" />
+        )}
       </View>
 
       <View style={styles.userInfo}>
-        <Text style={styles.userName}>{item.posto} {item.nome}</Text>
+        <Text style={styles.userName}>{item.posto} {item.name}</Text>
         <Text style={styles.userRG}>RG {item.re}</Text>
         <Text style={styles.userEmail} numberOfLines={1}>{item.email}</Text>
         
@@ -71,22 +89,20 @@ export default function UsuariosScreen() {
               fontWeight: '900', 
               color: item.nivel === 'Admin' ? '#3B82F6' : '#64748B' 
             }}>
-              {item.nivel.toUpperCase()}
+              {(item.nivel || 'OPERADOR').toUpperCase()}
             </Text>
           </View>
           
+          {/* Status Fictício baseado em ter RE ou não, ou ajuste conforme seu banco */}
           <View style={{ 
-            backgroundColor: item.status === 'Ativo' ? '#ECFDF5' : '#FEF2F2', 
+            backgroundColor: '#ECFDF5', 
             paddingHorizontal: 8, 
             paddingVertical: 2, 
-            borderRadius: 6 
+            borderRadius: 6,
+            marginLeft: 6
           }}>
-            <Text style={{ 
-              fontSize: 9, 
-              fontWeight: '900', 
-              color: item.status === 'Ativo' ? '#10B981' : '#EF4444' 
-            }}>
-              {item.status.toUpperCase()}
+            <Text style={{ fontSize: 9, fontWeight: '900', color: '#10B981' }}>
+              ATIVO
             </Text>
           </View>
         </View>
@@ -95,13 +111,13 @@ export default function UsuariosScreen() {
       <View style={styles.actionButtons}>
         <TouchableOpacity 
           style={styles.iconBtn} 
-          onPress={() => Alert.alert("Editar", `Editar militar: ${item.nome}`)}
+          onPress={() => Alert.alert("Editar", `Editar militar: ${item.name}`)}
         >
           <Edit3 size={18} color="#1E293B" />
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.iconBtn} 
-          onPress={() => Alert.alert("Remover", `Confirmar exclusão de ${item.nome}?`)}
+          onPress={() => Alert.alert("Remover", `Confirmar exclusão de ${item.name}?`)}
         >
           <Trash2 size={18} color="#EF4444" />
         </TouchableOpacity>
@@ -109,9 +125,7 @@ export default function UsuariosScreen() {
     </View>
   );
 
-  if (loading) {
-    return <UsersSkeleton />;
-  }
+  if (loading) return <UsersSkeleton />;
 
   return (
     <View style={styles.container}>
@@ -119,8 +133,15 @@ export default function UsuariosScreen() {
       
       <View style={styles.headerInfo}>
         <SafeAreaView>
-          <Text style={styles.title}>Usuários</Text>
-          <Text style={styles.subtitle}>Gestão de Acessos</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={styles.title}>Usuários</Text>
+              <Text style={styles.subtitle}>Gestão de Acessos</Text>
+            </View>
+            <TouchableOpacity onPress={onRefresh} style={{ marginRight: 20 }}>
+              <RefreshCw size={20} color="#FFF" />
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </View>
 
@@ -135,15 +156,13 @@ export default function UsuariosScreen() {
         <View style={styles.statCard}>
           <User size={20} color="#10B981" />
           <Text style={styles.statValue}>
-            {usuarios.filter(u => u.status === 'Ativo').length.toString().padStart(2, '0')}
+            {usuarios.length.toString().padStart(2, '0')}
           </Text>
-          <Text style={styles.statLabel}>Ativos</Text>
+          <Text style={styles.statLabel}>Total</Text>
         </View>
         <View style={styles.statCard}>
           <ShieldAlert size={20} color="#EF4444" />
-          <Text style={styles.statValue}>
-            {usuarios.filter(u => u.status === 'Inativo').length.toString().padStart(2, '0')}
-          </Text>
+          <Text style={styles.statValue}>00</Text>
           <Text style={styles.statLabel}>Bloqueio</Text>
         </View>
       </View>
@@ -167,6 +186,9 @@ export default function UsuariosScreen() {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         ListEmptyComponent={() => (
           <Text style={{ textAlign: 'center', color: '#94A3B8', marginTop: 30, fontWeight: '600' }}>
             Nenhum militar encontrado.
