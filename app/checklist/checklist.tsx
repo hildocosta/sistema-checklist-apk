@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   View, Text, TouchableOpacity, TextInput,
-  FlatList, StatusBar, Alert,
-  ScrollView, Animated, Easing, LayoutAnimation,
-  ActivityIndicator, Modal
+  FlatList, StatusBar, ScrollView, Animated, 
+  Easing, LayoutAnimation, ActivityIndicator, Modal
 } from "react-native";
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, Search, PackageCheck, AlertCircle, CloudUpload } from 'lucide-react-native';
+import { ChevronRight, PackageCheck, AlertCircle, CloudUpload } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -17,6 +16,8 @@ import ChecklistSkeleton from "../../components/ChecklistSkeleton";
 import { useAuth } from "../../context/AuthContext"; 
 import api from "../../service/api"; 
 import { styles } from "./styles";
+
+import CustomModal from "../../components/CustomModalCheckList/index";
 
 const ProcessingOverlay = ({ visible, message }: { visible: boolean, message: string }) => (
   <Modal transparent visible={visible} animationType="fade">
@@ -52,12 +53,26 @@ export default function ChecklistRefinado() {
   const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState<InventarioItem[]>(JSON.parse(JSON.stringify(DATABASE_INICIAL)));
   const [abaAtiva, setAbaAtiva] = useState("armamento"); 
-  const [filtroTexto, setFiltroTexto] = useState("");
   const [itemSaindo, setItemSaindo] = useState<number | null>(null);
   
   const [statusEnvio, setStatusEnvio] = useState({
     processando: false,
     mensagem: ""
+  });
+
+  
+  const [modalConfig, setModalConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    type: 'default' | 'danger' | 'success';
+    buttons: { text: string; onPress: () => void; style?: 'default' | 'destructive' | 'outline' }[];
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    type: "default",
+    buttons: []
   });
   
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -83,6 +98,20 @@ export default function ChecklistRefinado() {
     { id: 'acess sade', label: 'ACESS SADE' }
   ];
 
+  const resetarChecklist = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setItems(JSON.parse(JSON.stringify(DATABASE_INICIAL)));
+    setAbaAtiva("armamento");
+    
+    setModalConfig({
+      visible: true,
+      title: "Sucesso",
+      message: "O checklist foi reiniciado e todo o progresso limpo.",
+      type: "success",
+      buttons: [{ text: "OK", onPress: () => setModalConfig(prev => ({ ...prev, visible: false })) }]
+    });
+  };
+
   const getContagem = (catId: string) => {
     const subset = items.filter(i => i.cat === catId);
     return {
@@ -99,12 +128,9 @@ export default function ChecklistRefinado() {
   const itensFiltrados = useMemo(() => {
     return items.filter(i =>
       i.cat === abaAtiva &&
-      i.status === "pendente" &&
-      (i.desc.toLowerCase().includes(filtroTexto.toLowerCase()) || 
-       i.serie.toLowerCase().includes(filtroTexto.toLowerCase()) ||
-       (i.pmpr && i.pmpr.toLowerCase().includes(filtroTexto.toLowerCase())))
+      i.status === "pendente"
     );
-  }, [items, abaAtiva, filtroTexto]);
+  }, [items, abaAtiva]);
 
   const atualizarCampoItem = (id: number, campo: 'cautela' | 'pagLivro', valor: string) => {
     setItems(prev => prev.map(i => i.id === id ? { ...i, [campo]: valor } : i));
@@ -204,15 +230,18 @@ export default function ChecklistRefinado() {
       .qrcode-label { font-size: 6px; font-weight: bold; margin-top: 2px; color: #444; }
     </style></head><body>
       <div style="text-align: right; font-size: 8px; margin-bottom: 5px;">Relatório gerado em: ${dataFormatada} às ${horaFormatada.substring(0,5)}</div>
-      <div class="header-container">
-        <div class="header-pmpr">
-          POLÍCIA MILITAR DO PARANÁ<br/>6º CRPM | 17º BPM<br/>ALMOXARIFADO
-        </div>
-        <div class="doc-title">RELATÓRIO DIÁRIO DE CONFERÊNCIA DE CARGA</div>
+       <div class="header-container">
+             <div class="header-pmpr">
+              POLÍCIA MILITAR DO PARANÁ<br/>
+              6º COMANDO REGIONAL DE POLÍCIA MILITAR<br/>
+              17º BATALHÃO DE POLÍCIA MILITAR<br/>
+              QUARTA SEÇÃO - ALMOXARIFADO
+            </div>
+            <div class="doc-title">RELATÓRIO DIÁRIO DE CONFERÊNCIA DE CARGA</div>
       </div>
       <div class="info-box">
         <strong>RESPONSÁVEL:</strong> ${user?.posto || ''} ${user?.name || 'MILITAR'} | 
-        <strong>RG:</strong> ${user?.re || '---'} | <strong>UNIDADE:</strong> 17º BPM
+        <strong>RG:</strong> ${user?.re || '---'} | <strong>UNIDADE:</strong> 17º BPM | <strong>SEÇÃO:</strong> FURRIELAÇÃO
       </div>
       ${htmlTabelas}
       <table class="footer-table">
@@ -250,29 +279,83 @@ export default function ChecklistRefinado() {
       setStatusEnvio({ processando: false, mensagem: "" });
 
       if (res.status === 201 || res.status === 200) {
-        Alert.alert("Sucesso", "Conferência finalizada e enviada com sucesso!", [
-          { text: "OK", onPress: () => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'dashboard/dashboard' }] })) }
-        ]);
+        setModalConfig({
+          visible: true,
+          title: "Sucesso",
+          message: "Conferência finalizada e enviada com sucesso!",
+          type: "success",
+          buttons: [{ 
+            text: "OK", 
+            onPress: () => {
+              setModalConfig(prev => ({ ...prev, visible: false }));
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'dashboard/dashboard' }] }));
+            }
+          }]
+        });
       }
     } catch (err) {
       setStatusEnvio({ processando: false, mensagem: "" });
-      Alert.alert("Aviso de Conexão", "Não foi possível enviar ao servidor. O PDF foi aberto para salvamento manual.");
+      setModalConfig({
+        visible: true,
+        title: "Aviso de Conexão",
+        message: "Não foi possível enviar ao servidor. O PDF foi aberto para salvamento manual.",
+        type: "danger",
+        buttons: [{ text: "Entendido", onPress: () => setModalConfig(prev => ({ ...prev, visible: false })) }]
+      });
     }
   };
 
   const finalizarEEnviar = async () => {
     if (progresso < 100) {
-      Alert.alert("Pendente", `Ainda restam ${itensFaltantes} itens para conferir.`);
+      setModalConfig({
+        visible: true,
+        title: "Pendente",
+        message: `Ainda restam ${itensFaltantes} itens para conferir. Deseja cancelar todo o progresso?`,
+        type: "danger",
+        buttons: [
+          { text: "Continuar Conferindo", onPress: () => setModalConfig(prev => ({ ...prev, visible: false })), style: 'outline' },
+          { 
+            text: "CANCELAR TUDO", 
+            onPress: () => {
+              setModalConfig(prev => ({ ...prev, visible: false }));
+              resetarChecklist();
+            },
+            style: 'destructive'
+          }
+        ]
+      });
       return;
     }
 
-    Alert.alert(
-      "Finalizar Conferência", 
-      "Deseja gerar o relatório assinado agora?",
-      [
+    setModalConfig({
+      visible: true,
+      title: "Finalizar Conferência",
+      message: "Escolha uma ação para o relatório gerado:",
+      type: "default",
+      buttons: [
+        { 
+          text: "Enviar ao Sistema", 
+          onPress: async () => {
+            setModalConfig(prev => ({ ...prev, visible: false }));
+            setStatusEnvio({ processando: true, mensagem: "Preparando envio..." });
+            try {
+              const agora = new Date();
+              const dF = agora.toLocaleDateString('pt-BR');
+              const hF = agora.toLocaleTimeString('pt-BR');
+              const hash = `CHECK-${user?.re}-${Date.now()}`;
+              const qr = await getQRCodeBase64(hash);
+              const html = gerarHTMLParaPDF(dF, hF, hash, qr || "");
+              const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
+              await executarEnvioServidor(uri, base64 || "", dF, hF, hash);
+            } catch (e) {
+              setStatusEnvio({ processando: false, mensagem: "" });
+            }
+          }
+        },
         { 
           text: "Visualizar PDF", 
           onPress: async () => {
+            setModalConfig(prev => ({ ...prev, visible: false }));
             setStatusEnvio({ processando: true, mensagem: "Gerando PDF..." });
             try {
               const agora = new Date();
@@ -286,32 +369,30 @@ export default function ChecklistRefinado() {
           }
         },
         { 
-          text: "Enviar ao Sistema", 
-          onPress: async () => {
-            setStatusEnvio({ processando: true, mensagem: "Preparando envio..." });
-            try {
-              const agora = new Date();
-              const dF = agora.toLocaleDateString('pt-BR');
-              const hF = agora.toLocaleTimeString('pt-BR');
-              const hash = `CHECK-${user?.re}-${Date.now()}`;
-              
-              setStatusEnvio({ processando: true, mensagem: "Gerando Assinatura..." });
-              const qr = await getQRCodeBase64(hash);
-              
-              setStatusEnvio({ processando: true, mensagem: "Renderizando..." });
-              const html = gerarHTMLParaPDF(dF, hF, hash, qr || "");
-              const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
-              
-              await executarEnvioServidor(uri, base64 || "", dF, hF, hash);
-            } catch (e) {
-              setStatusEnvio({ processando: false, mensagem: "" });
-              Alert.alert("Erro", "Falha ao processar relatório.");
-            }
+          text: "LIMPAR TUDO", 
+          style: 'destructive',
+          onPress: () => {
+            setModalConfig({
+              visible: true,
+              title: "Confirmação",
+              message: "Isso apagará todo o checklist atual. Confirmar?",
+              type: "danger",
+              buttons: [
+                { text: "Não", onPress: () => setModalConfig(prev => ({ ...prev, visible: false })), style: 'outline' },
+                { 
+                  text: "Sim, Limpar", 
+                  onPress: () => {
+                    setModalConfig(prev => ({ ...prev, visible: false }));
+                    resetarChecklist();
+                  },
+                  style: 'destructive'
+                }
+              ]
+            });
           }
-        },
-        { text: "Cancelar", style: 'cancel' }
+        }
       ]
-    );
+    });
   };
 
   if (isLoading) return <ChecklistSkeleton />;
@@ -323,6 +404,16 @@ export default function ChecklistRefinado() {
       <ProcessingOverlay 
         visible={statusEnvio.processando} 
         message={statusEnvio.mensagem} 
+      />
+
+      {/* MODAL CORRIGIDO: Passando props de botões diretamente */}
+      <CustomModal 
+        isVisible={modalConfig.visible}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        buttons={modalConfig.buttons}
+        onClose={() => setModalConfig(prev => ({ ...prev, visible: false }))}
       />
 
       <View style={styles.headerBackground}>
@@ -368,19 +459,6 @@ export default function ChecklistRefinado() {
             );
           })}
         </ScrollView>
-      </View>
-
-      <View style={styles.searchSection}>
-        <View style={styles.searchContainer}>
-          <Search size={20} color="#94a3b8" style={styles.searchIcon} />
-          <TextInput
-            placeholder="Buscar..."
-            style={styles.searchInput}
-            value={filtroTexto}
-            onChangeText={setFiltroTexto}
-            placeholderTextColor="#94a3b8"
-          />
-        </View>
       </View>
 
       <FlatList

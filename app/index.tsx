@@ -8,7 +8,8 @@ import {
   Platform, 
   ScrollView,
   TouchableOpacity,
-  Alert
+  Alert,
+  Keyboard // 1. Importe o Keyboard aqui
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -28,6 +29,9 @@ export default function LoginPage() {
   const { signIn } = useAuth();
 
   const handleLogin = async () => {
+    // 2. Esconde o teclado imediatamente ao clicar no botão
+    Keyboard.dismiss();
+
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
@@ -104,6 +108,8 @@ export default function LoginPage() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  // Opcional: faz o teclado sumir ao clicar em "Concluído" no teclado
+                  returnKeyType="next" 
                 />
 
                 <CustomInput 
@@ -113,6 +119,9 @@ export default function LoginPage() {
                   onChangeText={setPassword}
                   isPassword
                   autoCapitalize="none"
+                  // Opcional: tenta logar direto ao apertar "Enviar" no teclado
+                  returnKeyType="go"
+                  onSubmitEditing={handleLogin}
                 />
 
                 <TouchableOpacity 
