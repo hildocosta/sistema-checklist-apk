@@ -130,10 +130,6 @@ export default function RegisterPage() {
                   isPassword
                 />
 
-                <Text style={{ fontSize: 11, color: '#666', textAlign: 'center', marginBottom: 15 }}>
-                  * Você preencherá o RE e Posto na tela de Perfil.
-                </Text>
-
                 <View style={{ marginTop: 5 }}>
                   <PrimaryButton 
                     title={isLoading ? "CRIANDO CONTA..." : "CRIAR CONTA"}

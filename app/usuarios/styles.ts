@@ -97,6 +97,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#E2E8F0",
+    overflow: "hidden"
   },
   userInfo: {
     flex: 1,
@@ -123,6 +124,15 @@ export const styles = StyleSheet.create({
     gap: 5,
     marginTop: 8,
   },
+  badgeBase: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: "900",
+  },
   actionButtons: {
     flexDirection: "row",
     gap: 8,
@@ -131,5 +141,115 @@ export const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 10,
     backgroundColor: "#F1F5F9",
-  }
+  },
+  emptyText: {
+    textAlign: 'center', 
+    color: '#94A3B8', 
+    marginTop: 30, 
+    fontWeight: '600'
+  },
+
+  /* --- ESTILOS DO MODAL (ADICIONADOS) --- */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(2, 6, 23, 0.7)", // Overlay escuro combinando com o Header
+    justifyContent: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#0F172A",
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#64748B",
+    textTransform: "uppercase",
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  input: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: "#0F172A",
+  },
+  rowLevels: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 5,
+    marginBottom: 10,
+  },
+  levelOption: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#F1F5F9",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+  },
+  levelOptionActive: {
+    borderColor: "#3B82F6",
+    backgroundColor: "#EEF2FF",
+  },
+  levelText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  levelTextActive: {
+    color: "#3B82F6",
+  },
+  modalFooter: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginTop: 25,
+    gap: 12,
+  },
+  btnCancel: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  btnCancelText: {
+    color: "#64748B",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  btnSave: {
+    backgroundColor: "#3B82F6",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 140,
+  },
+  btnSaveText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 14,
+  },
 });

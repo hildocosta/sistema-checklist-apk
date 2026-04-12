@@ -13,9 +13,7 @@ import {
 import { useRouter, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-// --- IMPORTAÇÃO DO CONTEXTO ---
 import { useAuth } from "../context/AuthContext";
-
 import { styles } from "./styles"; 
 import { PrimaryButton } from "../components/PrimaryButton"; 
 import { CustomInput } from "../components/CustomInput";
@@ -27,13 +25,13 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   
   const router = useRouter();
-  
-  // Puxamos a função de login real do seu contexto
   const { signIn } = useAuth();
 
   const handleLogin = async () => {
-    // 1. Validação básica de campos vazios
-    if (email === "" || password === "") {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (cleanEmail === "" || cleanPassword === "") {
       setError("POR FAVOR, PREENCHA TODOS OS CAMPOS.");
       return;
     }
@@ -42,19 +40,15 @@ export default function LoginPage() {
     setError("");
     
     try {
-      // 2. Chamada para a API da Vercel através do Contexto
       await signIn({
-        email: email.toLowerCase().trim(),
-        password: password
+        email: cleanEmail,
+        password: cleanPassword
       });
       
-      // O redirecionamento para o dashboard já acontece dentro do AuthContext.tsx 
-      // se o status for 200.
-      
     } catch (err: any) {
-      // 3. Tratamento de erro caso a API retorne falha
-      setError("E-MAIL OU SENHA INCORRETOS.");
-      console.log("Erro no login:", err);
+      const serverMessage = err.response?.data?.error || "E-MAIL OU SENHA INCORRETOS.";
+      setError(serverMessage.toUpperCase());
+      Alert.alert("Erro de Acesso", serverMessage);
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +103,7 @@ export default function LoginPage() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  autoCorrect={false}
                 />
 
                 <CustomInput 
@@ -117,6 +112,7 @@ export default function LoginPage() {
                   value={password}
                   onChangeText={setPassword}
                   isPassword
+                  autoCapitalize="none"
                 />
 
                 <TouchableOpacity 
