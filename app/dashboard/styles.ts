@@ -3,6 +3,7 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
+  // --- LAYOUT BASE ---
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -20,18 +21,25 @@ export const styles = StyleSheet.create({
     color: '#94A3B8',
     letterSpacing: 1,
   },
+
+  // --- CABEÇALHO (STATUS DO TURNO) ---
   statusHeader: {
     padding: 20,
-    paddingTop: 30,
+    paddingTop: 40, // Aumentado para não colidir com notch
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     marginBottom: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
   },
   headerNormal: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0F172A', // Azul escuro/Preto PMPR
   },
   headerAlert: {
-    backgroundColor: '#DC2626',
+    backgroundColor: '#DC2626', // Vermelho alerta
   },
   headerInfo: {
     flexDirection: 'row',
@@ -42,15 +50,17 @@ export const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontSize: 10,
     fontWeight: '900',
+    textTransform: 'uppercase',
   },
   headerSubtitle: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '900',
   },
+
+  // --- GRID DE CARDS (STATS) ---
   gridCards: {
     paddingHorizontal: 15,
-    gap: 10,
   },
   row: {
     flexDirection: 'row',
@@ -97,6 +107,20 @@ export const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
+
+  // --- INFO DE ÚLTIMA ATUALIZAÇÃO ---
+  updateInfo: {
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  updateText: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: '700',
+    fontStyle: 'italic',
+  },
+
+  // --- SEÇÕES E LOGS ---
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -123,6 +147,8 @@ export const styles = StyleSheet.create({
   logAlert: {
     backgroundColor: '#FFF1F1',
     borderColor: '#FEE2E2',
+    borderLeftWidth: 4,
+    borderLeftColor: '#DC2626',
   },
   logHeader: {
     flexDirection: 'row',
@@ -144,7 +170,7 @@ export const styles = StyleSheet.create({
   logStatusText: {
     fontSize: 9,
     fontWeight: '900',
-    color: '#DC2626',
+    color: '#64748B', // Default
     textTransform: 'uppercase',
   },
   logEquipamento: {
@@ -173,5 +199,19 @@ export const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     color: '#94A3B8',
+  },
+
+  // --- ESTADOS VAZIOS ---
+  emptyLogs: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    opacity: 0.5,
+  },
+  emptyLogsText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+    textAlign: 'center',
   }
 });

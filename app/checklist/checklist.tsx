@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   View, Text, TouchableOpacity, TextInput,
   FlatList, StatusBar, Alert,
   ScrollView, Animated, Easing, LayoutAnimation,
-  ActivityIndicator
+  ActivityIndicator, Modal
 } from "react-native";
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, Search, PackageCheck, Send, AlertCircle } from 'lucide-react-native';
+import { ChevronRight, Search, PackageCheck, Send, AlertCircle, CloudUpload } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -18,6 +18,35 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../service/api"; 
 import { styles } from "./styles";
 
+// Componente de Overlay para evitar a "tela inerte"
+const ProcessingOverlay = ({ visible, message }: { visible: boolean, message: string }) => (
+  <Modal transparent visible={visible} animationType="fade">
+    <View style={{
+      flex: 1, 
+      backgroundColor: 'rgba(2, 6, 23, 0.85)', 
+      justifyContent: 'center', 
+      alignItems: 'center'
+    }}>
+      <View style={{ alignItems: 'center', padding: 30 }}>
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text style={{ 
+          color: '#fff', 
+          marginTop: 20, 
+          fontSize: 16, 
+          fontWeight: '600',
+          textAlign: 'center',
+          letterSpacing: 0.5
+        }}>
+          {message}
+        </Text>
+        <Text style={{ color: '#94a3b8', marginTop: 8, fontSize: 12 }}>
+          Por favor, não feche o aplicativo.
+        </Text>
+      </View>
+    </View>
+  </Modal>
+);
+
 export default function ChecklistRefinado() {
   const { user } = useAuth(); 
   const navigation = useNavigation();
@@ -27,7 +56,12 @@ export default function ChecklistRefinado() {
   const [abaAtiva, setAbaAtiva] = useState("armamento"); 
   const [filtroTexto, setFiltroTexto] = useState("");
   const [itemSaindo, setItemSaindo] = useState<number | null>(null);
-  const [enviando, setEnviando] = useState(false);
+  
+  // Estados de controle de envio refinados
+  const [statusEnvio, setStatusEnvio] = useState({
+    processando: false,
+    mensagem: "Iniciando..."
+  });
   
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -98,27 +132,21 @@ export default function ChecklistRefinado() {
     try {
       const urlValidacao = `https://sistema-checklist-frontend.vercel.app/validar/${hash}`;
       const apiUrl = `https://quickchart.io/qr?text=${encodeURIComponent(urlValidacao)}&size=150&margin=1`;
-      
       const response = await fetch(apiUrl);
       if (!response.ok) return null;
-
       const blob = await response.blob();
       return new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => resolve("");
         reader.readAsDataURL(blob);
       });
-    } catch (error) {
-      return null;
-    }
+    } catch (error) { return null; }
   };
 
   const gerarHTMLParaPDF = (dataFormatada: string, horaFormatada: string, hashUnico: string, qrCodeBase64: string) => {
     const htmlTabelas = categoriasOrd.map(cat => {
       const itensDaCat = items.filter(i => i.cat === cat.id);
       if (itensDaCat.length === 0) return '';
-
       return `
         <div class="category-block">
           <div class="category-header">${cat.label} (${itensDaCat.length} ITENS)</div>
@@ -156,133 +184,138 @@ export default function ChecklistRefinado() {
       `;
     }).join('');
 
-    return `
-      <html>
-        <head>
-          <style>
-            @page { margin: 30px; size: A4; }
-            body { font-family: 'Helvetica', sans-serif; color: #000; line-height: 1.2; padding: 0; margin: 0; }
-            .header-container { text-align: center; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            .header-pmpr { font-size: 10px; font-weight: bold; text-transform: uppercase; }
-            .doc-title { font-size: 13px; font-weight: bold; margin: 8px 0; text-transform: uppercase; background-color: #eee; padding: 5px; border: 1px solid #000; }
-            .info-box { font-size: 9px; border: 1px solid #000; padding: 6px; margin-bottom: 15px; background-color: #fafafa; }
-            .category-block { page-break-inside: avoid; margin-bottom: 15px; }
-            .category-header { background-color: #f1f5f9; padding: 4px; border: 1px solid #000; border-bottom: none; font-weight: bold; font-size: 9px; }
-            .main-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-            .main-table th { background-color: #0f172a; color: #ffffff; border: 1px solid #000; padding: 4px; font-size: 8px; }
-            .main-table td { border: 1px solid #000; padding: 4px; font-size: 8px; word-wrap: break-word; vertical-align: middle; }
-            .item-desc { font-weight: bold; text-transform: uppercase; }
-            .item-sn { font-size: 7px; color: #444; }
-            .conf-ok { text-align: center; font-weight: bold; color: #059669; }
-            .footer-table { width: 100%; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; }
-            .signature-side { text-align: center; font-size: 9px; }
-            .qrcode-container { text-align: center; display: flex; flex-direction: column; align-items: center; }
-            .qrcode-img { width: 85px; height: 85px; }
-            .qrcode-label { font-size: 6px; font-weight: bold; margin-top: 2px; color: #444; }
-          </style>
-        </head>
-        <body>
-          <div style="text-align: right; font-size: 8px; margin-bottom: 5px;">Gerado em: ${dataFormatada} às ${horaFormatada.substring(0,5)}</div>
-          <div class="header-container">
-             <div class="header-pmpr">
-              POLÍCIA MILITAR DO PARANÁ<br/>
-              6º COMANDO REGIONAL DE POLÍCIA MILITAR<br/>
-              17º BATALHÃO DE POLÍCIA MILITAR<br/>
-              QUARTA SEÇÃO - ALMOXARIFADO
+    return `<html><head><style>
+      @page { margin: 30px; size: A4; }
+      body { font-family: 'Helvetica', sans-serif; color: #000; line-height: 1.2; padding: 0; margin: 0; }
+      .header-container { text-align: center; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .header-pmpr { font-size: 10px; font-weight: bold; text-transform: uppercase; }
+      .doc-title { font-size: 13px; font-weight: bold; margin: 8px 0; text-transform: uppercase; background-color: #eee; padding: 5px; border: 1px solid #000; }
+      .info-box { font-size: 9px; border: 1px solid #000; padding: 6px; margin-bottom: 15px; background-color: #fafafa; }
+      .category-block { page-break-inside: avoid; margin-bottom: 15px; }
+      .category-header { background-color: #f1f5f9; padding: 4px; border: 1px solid #000; border-bottom: none; font-weight: bold; font-size: 9px; }
+      .main-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .main-table th { background-color: #0f172a; color: #ffffff; border: 1px solid #000; padding: 4px; font-size: 8px; }
+      .main-table td { border: 1px solid #000; padding: 4px; font-size: 8px; word-wrap: break-word; vertical-align: middle; }
+      .item-desc { font-weight: bold; text-transform: uppercase; }
+      .item-sn { font-size: 7px; color: #444; }
+      .conf-ok { text-align: center; font-weight: bold; color: #059669; }
+      .footer-table { width: 100%; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; }
+      .signature-side { text-align: center; font-size: 9px; }
+      .qrcode-container { text-align: center; display: flex; flex-direction: column; align-items: center; }
+      .qrcode-img { width: 85px; height: 85px; }
+      .qrcode-label { font-size: 6px; font-weight: bold; margin-top: 2px; color: #444; }
+    </style></head><body>
+      <div style="text-align: right; font-size: 8px; margin-bottom: 5px;">Gerado em: ${dataFormatada} às ${horaFormatada.substring(0,5)}</div>
+      <div class="header-container">
+          <div class="header-pmpr">
+          POLÍCIA MILITAR DO PARANÁ<br/>6º CRPM | 17º BPM<br/>ALMOXARIFADO
+        </div>
+        <div class="doc-title">RELATÓRIO DIÁRIO DE CONFERÊNCIA DE CARGA</div>
+      </div>
+      <div class="info-box">
+        <strong>RESPONSÁVEL:</strong> ${user?.posto || ''} ${user?.name || 'MILITAR'} | 
+        <strong>RG:</strong> ${user?.re || '---'} | <strong>UNIDADE:</strong> 17º BPM
+      </div>
+      ${htmlTabelas}
+      <table class="footer-table">
+        <tr>
+          <td class="signature-side" style="width: 70%;">
+            <div style="border-top: 1px solid #000; width: 250px; margin: 30px auto 5px auto;"></div>
+            <strong>Assinatura Digital</strong><br/>ID: ${hashUnico}
+          </td>
+          <td style="width: 30%;">
+            <div class="qrcode-container">
+              ${qrCodeBase64 ? `<img src="${qrCodeBase64}" class="qrcode-img" />` : ''}
             </div>
-            <div class="doc-title">RELATÓRIO DIÁRIO DE CONFERÊNCIA DE CARGA</div>
-          </div>
-          <div class="info-box">
-            <strong>RESPONSÁVEL:</strong> ${user?.posto || ''} ${user?.name || 'MILITAR'} | 
-            <strong>RG:</strong> ${user?.re || '---'} | <strong>UNIDADE:</strong> 17º BPM | <strong>SEÇÃO:</strong> FURRIELAÇÃO
-          </div>
-          ${htmlTabelas}
-          <div style="page-break-inside: avoid;">
-            <table class="footer-table">
-              <tr>
-                <td class="signature-side" style="width: 70%;">
-                  <div style="border-top: 1px solid #000; width: 250px; margin: 30px auto 5px auto;"></div>
-                  <strong>Assinatura Digital</strong><br/><span style="font-size: 7px;">ID: ${hashUnico}</span>
-                </td>
-                <td style="width: 30%;">
-                  <div class="qrcode-container">
-                    ${qrCodeBase64 ? `
-                      <img src="${qrCodeBase64}" class="qrcode-img" />
-                      <div class="qrcode-label">ESCANEIE PARA VALIDAR</div>
-                    ` : '<div style="font-size:8px">QR Code Indisponível</div>'}
-                  </div>
-                </td>
-              </tr>
-            </table>
-          </div>
-        </body>
-      </html>
-    `;
+          </td>
+        </tr>
+      </table>
+    </body></html>`;
+  };
+
+  // Função Senior de Execução de Envio
+  const executarEnvioServidor = async (uri: string, base64: string, dataF: string, horaF: string, hashU: string) => {
+    setStatusEnvio({ processando: true, mensagem: "Sincronizando com o Servidor..." });
+    
+    try {
+      const payload = {
+        pdfBase64: `data:application/pdf;base64,${base64}`,
+        fileName: `Checklist_17BPM_${user?.re}_${Date.now()}.pdf`,
+        data: dataF,
+        hora: horaF,
+        hash: hashU,
+        responsavel: `${user?.posto || ''} ${user?.name || ''}`.trim(),
+        itens: items,
+      };
+
+      const res = await api.post("/mobile/conferencia", payload);
+      
+      setStatusEnvio({ processando: false, mensagem: "" }); // Remove overlay antes do alert
+
+      if (res.status === 201 || res.status === 200) {
+        Alert.alert("Sucesso", "Relatório enviado ao sistema com sucesso!", [
+          { text: "OK", onPress: () => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'dashboard/dashboard' }] })) }
+        ]);
+      }
+    } catch (err) {
+      setStatusEnvio({ processando: false, mensagem: "" });
+      Alert.alert("Erro no Envio", "Não foi possível conectar ao servidor. O PDF foi salvo localmente.");
+    }
   };
 
   const finalizarEEnviar = async () => {
     if (progresso < 100) {
-      Alert.alert("Atenção", "Conclua a conferência de todos os itens antes de gerar o relatório.");
+      Alert.alert("Atenção", "Conclua a conferência de todos os itens.");
       return;
     }
 
-    setEnviando(true);
-
-    try {
-      const agora = new Date();
-      const dataFormatada = agora.toLocaleDateString('pt-BR');
-      const horaFormatada = agora.toLocaleTimeString('pt-BR');
-      const hashUnico = `CHECK-${user?.re || '000'}-${Date.now()}`;
-      
-      let qrCodeBase64 = await getQRCodeBase64(hashUnico);
-      const htmlContent = gerarHTMLParaPDF(dataFormatada, horaFormatada, hashUnico, qrCodeBase64 || "");
-
-      await new Promise(r => setTimeout(r, 400));
-
-      const { uri, base64 } = await Print.printToFileAsync({ 
-        html: htmlContent, 
-        base64: true 
-      });
-
-      Alert.alert(
-        "Relatório Pronto", 
-        "Conferência finalizada. Como deseja proceder?",
-        [
-          { text: "Visualizar PDF", onPress: () => Sharing.shareAsync(uri) },
-          { 
-            text: "Enviar para Sistema", 
-            onPress: async () => {
-              try {
-                const payload = {
-                  pdfBase64: `data:application/pdf;base64,${base64}`,
-                  fileName: `Checklist_17BPM_${user?.re}_${Date.now()}.pdf`,
-                  data: dataFormatada,
-                  hora: horaFormatada,
-                  hash: hashUnico,
-                  responsavel: `${user?.posto || ''} ${user?.name || ''}`.trim(),
-                  itens: items,
-                };
-
-                const res = await api.post("/mobile/conferencia", payload);
-                if (res.status === 201 || res.status === 200) {
-                  Alert.alert("Sucesso", "Relatório enviado com sucesso!", [
-                    { text: "OK", onPress: () => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'dashboard/dashboard' }] })) }
-                  ]);
-                }
-              } catch (err) {
-                Alert.alert("Erro no Envio", "O PDF foi salvo no celular, mas não pôde ser enviado ao servidor.");
-              }
+    Alert.alert(
+      "Finalizar Conferência", 
+      "Como deseja proceder com o relatório gerado?",
+      [
+        { 
+          text: "Visualizar e Compartilhar", 
+          onPress: async () => {
+            setStatusEnvio({ processando: true, mensagem: "Gerando PDF assinado..." });
+            try {
+              const agora = new Date();
+              const hash = `CHECK-${user?.re}-${Date.now()}`;
+              const qr = await getQRCodeBase64(hash);
+              const html = gerarHTMLParaPDF(agora.toLocaleDateString('pt-BR'), agora.toLocaleTimeString('pt-BR'), hash, qr || "");
+              const { uri } = await Print.printToFileAsync({ html });
+              setStatusEnvio({ processando: false, mensagem: "" });
+              await Sharing.shareAsync(uri);
+            } catch { setStatusEnvio({ processando: false, mensagem: "" }); }
+          }
+        },
+        { 
+          text: "Enviar para o Sistema", 
+          onPress: async () => {
+            setStatusEnvio({ processando: true, mensagem: "Preparando Documentação..." });
+            try {
+              const agora = new Date();
+              const dF = agora.toLocaleDateString('pt-BR');
+              const hF = agora.toLocaleTimeString('pt-BR');
+              const hash = `CHECK-${user?.re}-${Date.now()}`;
+              
+              setStatusEnvio({ processando: true, mensagem: "Gerando Assinatura Digital..." });
+              const qr = await getQRCodeBase64(hash);
+              
+              setStatusEnvio({ processando: true, mensagem: "Renderizando Relatório..." });
+              const html = gerarHTMLParaPDF(dF, hF, hash, qr || "");
+              const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
+              
+              // Chama a função de upload
+              await executarEnvioServidor(uri, base64 || "", dF, hF, hash);
+            } catch (e) {
+              setStatusEnvio({ processando: false, mensagem: "" });
+              Alert.alert("Erro", "Falha ao processar arquivo.");
             }
-          },
-          { text: "Cancelar", style: 'cancel' }
-        ]
-      );
-
-    } catch (error) {
-      Alert.alert("Erro", "Falha ao gerar o arquivo PDF.");
-    } finally {
-      setEnviando(false);
-    }
+          }
+        },
+        { text: "Cancelar", style: 'cancel' }
+      ]
+    );
   };
 
   if (isLoading) return <ChecklistSkeleton />;
@@ -291,6 +324,12 @@ export default function ChecklistRefinado() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#020617" />
       
+      {/* Overlay de Processamento */}
+      <ProcessingOverlay 
+        visible={statusEnvio.processando} 
+        message={statusEnvio.mensagem} 
+      />
+
       <View style={styles.headerBackground}>
         <SafeAreaView edges={['top', 'left', 'right']}>
           <View style={styles.headerTop}>
@@ -414,33 +453,28 @@ export default function ChecklistRefinado() {
       <View style={styles.footerAction}>
         <TouchableOpacity 
           activeOpacity={0.8}
-          disabled={enviando}
+          disabled={statusEnvio.processando}
           style={[
             styles.sendButton, 
-            
             progresso < 100 && { backgroundColor: '#334155', opacity: 1 } 
           ]}
           onPress={finalizarEEnviar}
         >
-          {enviando ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              {progresso === 100 ? (
-                <>
-                  <Send size={20} color="#fff" style={{marginRight: 8}} />
-                  <Text style={styles.sendButtonText}>GERAR E ENVIAR RELATÓRIO</Text>
-                </>
-              ) : (
-                <>
-                  <AlertCircle size={20} color="#fff" style={{marginRight: 8}} />
-                  <Text style={styles.sendButtonText}>
-                    PENDENTE: {itensFaltantes} {itensFaltantes === 1 ? 'ITEM' : 'ITENS'}
-                  </Text>
-                </>
-              )}
-            </>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {progresso === 100 ? (
+              <>
+                <CloudUpload size={20} color="#fff" style={{marginRight: 8}} />
+                <Text style={styles.sendButtonText}>FINALIZAR CONFERÊNCIA</Text>
+              </>
+            ) : (
+              <>
+                <AlertCircle size={20} color="#fff" style={{marginRight: 8}} />
+                <Text style={styles.sendButtonText}>
+                  PENDENTE: {itensFaltantes} {itensFaltantes === 1 ? 'ITEM' : 'ITENS'}
+                </Text>
+              </>
+            )}
+          </View>
         </TouchableOpacity>
       </View>
     </View>

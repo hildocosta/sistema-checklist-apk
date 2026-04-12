@@ -3,8 +3,9 @@ import {
   View, 
   Text, 
   ScrollView, 
-  RefreshControl,
-  Dimensions
+  RefreshControl, 
+  Alert,
+  SafeAreaView
 } from "react-native";
 import { 
   Shield, 
@@ -15,40 +16,26 @@ import {
   Activity
 } from "lucide-react-native";
 
-
+import api from "../../service/api"; 
 import { DashboardSkeleton } from "../../components/Skeleton";
 import { styles } from "./styles";
-
-const { width } = Dimensions.get("window");
 
 export default function DashboardComando() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const mockData = {
-    isPendente: true,
-    turnoAlvo: "MATUTINO",
-    ultimoChecklist: { responsavel: "SGT FURRIEL", hora: "08:30" },
-    stats: {
-      aderencia: "92%",
-      reserva: 45,
-      emCautela: 128,
-      avarias: 3
-    },
-    logs: [
-      { id: "LOG-A2", equipamento: "FUZIL IA2", status: "CRÍTICO", militar: "FALHA NO PERCURSOR DURANTE CONFERÊNCIA", responsavel: "SGT RAMOS", hora: "09:12", livro: "042" },
-      { id: "LOG-B5", equipamento: "MUNIÇÃO .40", status: "MANUTENÇÃO", militar: "LOTE ENVIADO PARA DESCARTE/TROCA", responsavel: "SGT FURRIEL", hora: "08:45", livro: "041" }
-    ]
-  };
-
   const fetchData = async () => {
-    
-    setTimeout(() => {
-      setData(mockData);
+    try {
+      const response = await api.get("/mobile/dashboard-stats"); 
+      setData(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+      Alert.alert("Erro", "Não foi possível sincronizar os dados do batalhão.");
+    } finally {
       setIsLoading(false);
       setRefreshing(false);
-    }, 2000); 
+    }
   };
 
   useEffect(() => {
@@ -60,98 +47,125 @@ export default function DashboardComando() {
     fetchData();
   };
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return <DashboardSkeleton />;
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl 
-          refreshing={refreshing} 
-          onRefresh={onRefresh} 
-          tintColor="#3B82F6"
-          colors={["#3B82F6"]}
-        />
-      }
-    >
-    
+    <SafeAreaView style={{ flex: 1, backgroundColor: styles.container.backgroundColor }}>
       
-      <View style={[styles.statusHeader, data.isPendente ? styles.headerAlert : styles.headerNormal]}>
-        <View style={styles.headerInfo}>
-          <Shield color="#FFF" size={24} />
-          <View>
-            <Text style={styles.headerTitle}>17º BPM - PAINEL OPERACIONAL</Text>
-            <Text style={styles.headerSubtitle}>
-              {data.isPendente ? `ALERTA: TURNO ${data.turnoAlvo} PENDENTE` : `CONFERÊNCIA CONCLUÍDA`}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-     
-      <View style={styles.gridCards}>
-        <View style={styles.row}>
-          <StatCard 
-            label="STATUS" 
-            value={data.stats.aderencia} 
-            sub={data.isPendente ? "PENDENTE" : "OK"} 
-            icon={<Clock size={18} color="#EF4444" />}
-            alert={data.isPendente}
-          />
-          <StatCard 
-            label="RESERVA" 
-            value={data.stats.reserva} 
-            sub="DISPONÍVEL" 
-            icon={<HardDrive size={18} color="#10B981" />}
-          />
-        </View>
-        <View style={styles.row}>
-          <StatCard 
-            label="EM CAUTELA" 
-            value={data.stats.emCautela} 
-            sub="COM EFETIVO" 
-            icon={<User size={18} color="#3B82F6" />}
-          />
-          <StatCard 
-            label="AVARIAS" 
-            value={data.stats.avarias} 
-            sub="CRÍTICOS" 
-            icon={<AlertTriangle size={18} color="#F59E0B" />}
-            alert={data.stats.avarias > 0}
-          />
-        </View>
-      </View>
-
-      
-      <View style={styles.sectionHeader}>
-        <Activity size={18} color="#3B82F6" />
-        <Text style={styles.sectionTitle}>OCORRÊNCIAS EM TEMPO REAL</Text>
-      </View>
-
-      {data.logs.map((log: any, index: number) => (
-        <View key={index} style={[styles.logCard, log.status === 'CRÍTICO' && styles.logAlert]}>
-          <View style={styles.logHeader}>
-            <View style={styles.logBadge}>
-              <Text style={styles.logBadgeText}>{log.id}</Text>
+      {/* --- PARTE FIXA (ESTÁTICA) --- */}
+      <View style={{ zIndex: 10, elevation: 5, backgroundColor: styles.container.backgroundColor }}>
+        
+        {/* HEADER STATUS */}
+        <View style={[styles.statusHeader, data.isPendente ? styles.headerAlert : styles.headerNormal]}>
+          <View style={styles.headerInfo}>
+            <Shield color="#FFF" size={24} />
+            <View>
+              <Text style={styles.headerTitle}>17º BPM - PAINEL OPERACIONAL</Text>
+              <Text style={styles.headerSubtitle}>
+                {data.isPendente 
+                  ? `PENDÊNCIA: TURNO ${data.turnoAlvo}` 
+                  : `CHECKLIST CONCLUÍDO - ${data.turnoAlvo}`}
+              </Text>
             </View>
-            <Text style={styles.logStatusText}>{log.status}</Text>
-          </View>
-          
-          <Text style={styles.logEquipamento}>{log.equipamento}</Text>
-          <Text style={styles.logDescricao}>"{log.militar}"</Text>
-          
-          <View style={styles.logFooter}>
-            <Text style={styles.logFooterText}>LIVRO: {log.livro}</Text>
-            <Text style={styles.logFooterText}>{log.hora} • {log.responsavel}</Text>
           </View>
         </View>
-      ))}
 
-      <View style={{ height: 40 }} />
-    </ScrollView>
+        {/* GRUPO DE CARDS FIXOS */}
+        <View style={[styles.gridCards, { marginBottom: 10 }]}>
+          <View style={styles.row}>
+            <StatCard 
+              label="ADERÊNCIA" 
+              value={data.stats.aderencia} 
+              sub={data.isPendente ? "AGUARDANDO" : "CONCLUÍDO"} 
+              icon={<Clock size={18} color={data.isPendente ? "#EF4444" : "#10B981"} />}
+              alert={data.isPendente}
+            />
+            <StatCard 
+              label="RESERVA" 
+              value={data.stats.reserva} 
+              sub="DISPONÍVEL" 
+              icon={<HardDrive size={18} color="#10B981" />}
+            />
+          </View>
+          <View style={styles.row}>
+            <StatCard 
+              label="EM CAUTELA" 
+              value={data.stats.emCautela} 
+              sub="COM EFETIVO" 
+              icon={<User size={18} color="#3B82F6" />}
+            />
+            <StatCard 
+              label="AVARIAS" 
+              value={data.stats.avarias} 
+              sub="ALTERAÇÕES" 
+              icon={<AlertTriangle size={18} color="#F59E0B" />}
+              alert={data.stats.avarias > 0}
+            />
+          </View>
+        </View>
+
+        {/* INFO DE ATUALIZAÇÃO E TÍTULO DA SEÇÃO (TAMBÉM FIXO) */}
+        <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
+          <Text style={[styles.updateText, { marginBottom: 15 }]}>
+            Última conferência: {data.ultimoChecklist.hora} por {data.ultimoChecklist.responsavel}
+          </Text>
+          
+          <View style={[styles.sectionHeader, { marginTop: 0 }]}>
+            <Activity size={18} color="#3B82F6" />
+            <Text style={styles.sectionTitle}>ALTERAÇÕES CONSTATADAS</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* --- PARTE ROLÁVEL (DINÂMICA) --- */}
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }} 
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3B82F6" />
+        }
+      >
+        {data.logs.length === 0 ? (
+          <View style={styles.emptyLogs}>
+            <Text style={styles.emptyLogsText}>Nenhuma alteração registrada hoje.</Text>
+          </View>
+        ) : (
+          data.logs.map((log: any, index: number) => (
+            <View key={index} style={[
+              styles.logCard, 
+              (log.status === 'CRÍTICO' || log.status === 'EXTRAVIO') && styles.logAlert,
+              { marginHorizontal: 0, width: '100%' } // Ajuste para ocupar a largura correta
+            ]}>
+              <View style={styles.logHeader}>
+                <View style={styles.logBadge}>
+                  <Text style={[styles.logBadgeText, log.id.length > 8 && { fontSize: 10 }]}>
+                    {log.id}
+                  </Text>
+                </View>
+                <Text style={[
+                  styles.logStatusText, 
+                  (log.status === 'CRÍTICO' || log.status === 'EXTRAVIO') && { color: '#EF4444' },
+                  log.status === 'ADMINISTRATIVO' && { color: '#3B82F6' } 
+                ]}>
+                  {log.status}
+                </Text>
+              </View>
+              
+              <Text style={styles.logEquipamento}>{log.equipamento}</Text>
+              <Text style={styles.logDescricao}>Obs: {log.militar}</Text>
+              
+              <View style={styles.logFooter}>
+                <Text style={styles.logFooterText}>LIVRO: {log.livro}</Text>
+                <Text style={styles.logFooterText}>{log.hora} • {log.responsavel}</Text>
+              </View>
+            </View>
+          ))
+        )}
+      </ScrollView>
+
+    </SafeAreaView>
   );
 }
 
