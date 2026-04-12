@@ -8,7 +8,8 @@ import {
   Platform, 
   ScrollView,
   TouchableOpacity,
-  Alert 
+  Alert,
+  Keyboard 
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { ArrowLeft } from "lucide-react-native"; 
@@ -29,6 +30,9 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const handleRegister = async () => {
+    
+    Keyboard.dismiss();
+
     setIsLoading(true);
     setError("");
 

@@ -7,15 +7,14 @@ import {
   KeyboardAvoidingView, 
   Platform, 
   ScrollView, 
-  TouchableOpacity 
+  TouchableOpacity,
+  Keyboard 
 } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { ArrowLeft, MailCheck } from "lucide-react-native"; 
 import { StatusBar } from "expo-status-bar";
 
-
 import { styles } from "./styles";
-
 
 import { PrimaryButton } from "../../components/PrimaryButton"; 
 import { CustomInput } from "../../components/CustomInput";
@@ -28,6 +27,9 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
 
   const handleResetRequest = async () => {
+   
+    Keyboard.dismiss();
+
     setIsLoading(true);
     setError("");
 
@@ -37,6 +39,7 @@ export default function ForgotPasswordPage() {
       return;
     }
 
+    
     setTimeout(() => {
       if (email.includes("@pm.pr.gov.br")) {
         setIsLoading(false);
@@ -111,7 +114,6 @@ export default function ForgotPasswordPage() {
                     
                     <View style={styles.divider} />
 
-                   
                     <TouchableOpacity 
                       onPress={() => router.back()}
                       style={styles.registerContainer} 
@@ -147,7 +149,6 @@ export default function ForgotPasswordPage() {
                     onPress={() => setIsSubmitted(false)}
                     style={{ marginTop: 25 }}
                   >
-                   
                     <Text style={[styles.registerText, { textDecorationLine: 'underline' }]}>
                       Tentar outro e-mail
                     </Text>
