@@ -19,6 +19,9 @@ import { styles } from "./styles";
 import { PrimaryButton } from "../../components/PrimaryButton"; 
 import { CustomInput } from "../../components/CustomInput";
 
+// 1. IMPORTAR A INSTÂNCIA DA API
+import api from "../../service/api"; 
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -27,28 +30,38 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
 
   const handleResetRequest = async () => {
-   
+    // Esconde o teclado imediatamente
     Keyboard.dismiss();
+
+    // Validação inicial
+    if (email.trim() === "") {
+      setError("POR FAVOR, INFORME SEU E-MAIL.");
+      return;
+    }
 
     setIsLoading(true);
     setError("");
 
-    if (email === "") {
-      setError("POR FAVOR, INFORME SEU E-MAIL.");
-      setIsLoading(false);
-      return;
-    }
+    try {
+      // 2. CHAMADA REAL PARA O BACKEND
+      // O caminho deve ser o mesmo que você criou na pasta do backend: /mobile/forgot-password
+      const response = await api.post("/mobile/forgot-password", { 
+        email: email.toLowerCase().trim() 
+      });
 
-    
-    setTimeout(() => {
-      if (email.includes("@pm.pr.gov.br")) {
-        setIsLoading(false);
+      // Se a rota retornar sucesso (200 ou 201)
+      if (response.status === 200 || response.status === 201) {
         setIsSubmitted(true);
-      } else {
-        setError("E-MAIL NÃO ENCONTRADO OU INVÁLIDO.");
-        setIsLoading(false);
       }
-    }, 1500);
+      
+    } catch (err: any) {
+      // 3. TRATAMENTO DE ERRO VINDO DO SERVIDOR
+      // Captura a mensagem enviada pelo 'NextResponse' no seu route.js
+      const errorMessage = err.response?.data?.error || "ERRO AO SOLICITAR REDEFINIÇÃO.";
+      setError(errorMessage.toUpperCase());
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -146,7 +159,10 @@ export default function ForgotPasswordPage() {
                   />
 
                   <TouchableOpacity 
-                    onPress={() => setIsSubmitted(false)}
+                    onPress={() => {
+                      setIsSubmitted(false);
+                      setEmail("");
+                    }}
                     style={{ marginTop: 25 }}
                   >
                     <Text style={[styles.registerText, { textDecorationLine: 'underline' }]}>
