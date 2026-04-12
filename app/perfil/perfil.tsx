@@ -4,10 +4,9 @@ import {
   ScrollView, Platform, StatusBar, KeyboardAvoidingView, Alert, ActivityIndicator 
 } from "react-native";
 import { 
-  User, Mail, Camera, Save, 
-  Award, Building2, Phone, Hash, MapPin 
+  User as UserIcon, Mail, Camera, Save, 
+  Award, Building2, Phone, Hash 
 } from "lucide-react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
 import { useAuth } from "../../context/AuthContext";
@@ -16,10 +15,12 @@ import api from "../../service/api";
 import { styles } from "./styles";
 
 export default function ProfilePage() {
+  // O 'user' aqui já é o objeto do militar vindo do Contexto
   const { user, setUser, loading } = useAuth();
+  
   const [isSaving, setIsSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
+  // Estados locais para controle do formulário
   const [name, setName] = useState("");
   const [re, setRe] = useState("");
   const [posto, setPosto] = useState("");
@@ -29,17 +30,17 @@ export default function ProfilePage() {
   const [unidade, setUnidade] = useState("");
   const [image, setImage] = useState("");
 
+  // Sincroniza os campos assim que o usuário é carregado
   useEffect(() => {
     if (user) {
-      const userData = user?.user || user;
-      setName(userData.name || "");
-      setRe(userData.re || "");
-      setPosto(userData.posto || "Sd. QP PM");
-      setTelefone(userData.telefone || "");
-      setEmail(userData.email || "");
-      setSetor(userData.setor || "");
-      setUnidade(userData.unidade || "17º BPM");
-      setImage(userData.image || "");
+      setName(user.name || "");
+      setRe(user.re || "");
+      setPosto(user.posto || "Sd. QP PM");
+      setTelefone(user.telefone || "");
+      setEmail(user.email || "");
+      setSetor(user.setor || "");
+      setUnidade(user.unidade || "17º BPM");
+      setImage(user.image || "");
     }
   }, [user]);
 
@@ -60,7 +61,6 @@ export default function ProfilePage() {
     });
 
     if (!result.canceled) {
-      
       const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
       setImage(base64Image);
     }
@@ -71,13 +71,13 @@ export default function ProfilePage() {
       Alert.alert("Erro", "Nome e RG são campos obrigatórios.");
       return;
     }
+
     setIsSaving(true);
+
     try {
-      const userData = user?.user || user;
-      
-      
+      // Enviamos para a API usando o ID que está no contexto
       const response = await api.post("/mobile/update-profile", {
-        id: userData.id,
+        id: user?.id,
         name, 
         re, 
         posto, 
@@ -89,12 +89,25 @@ export default function ProfilePage() {
       });
 
       if (response.status === 200) {
-        const updatedData = { ...userData, name, re, posto, telefone, email, setor, unidade, image };
-        setUser(updatedData);
-        await AsyncStorage.setItem('@BPM17:user', JSON.stringify(updatedData));
+        // Atualizamos o contexto global. 
+        // O useEffect no AuthContext salvará isso no AsyncStorage automaticamente.
+        const updatedData = { 
+          ...user, 
+          name, 
+          re, 
+          posto, 
+          telefone, 
+          email, 
+          setor, 
+          unidade, 
+          image 
+        };
+
+        setUser(updatedData as any);
         Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
       }
     } catch (error: any) {
+      console.error("Erro ao salvar perfil:", error);
       Alert.alert("Erro", "Não foi possível salvar as alterações.");
     } finally {
       setIsSaving(false);
@@ -126,7 +139,7 @@ export default function ProfilePage() {
                 {image ? (
                   <Image source={{ uri: image }} style={styles.avatarImg} />
                 ) : (
-                  <User size={50} color="#cbd5e1" />
+                  <UserIcon size={50} color="#cbd5e1" />
                 )}
               </View>
               <TouchableOpacity 
@@ -151,20 +164,26 @@ export default function ProfilePage() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>NOME COMPLETO</Text>
                 <View style={styles.inputWrapper}>
-                  <User size={18} color="#94a3b8" style={styles.inputIcon} />
-                  <TextInput style={styles.input} value={name} onChangeText={setName} />
+                  <UserIcon size={18} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput 
+                    style={styles.input} 
+                    value={name} 
+                    onChangeText={setName} 
+                    placeholder="Nome Completo"
+                  />
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>RG</Text>
-                <View style={[styles.inputWrapper, { borderColor: '#e2e8f0' }]}>
+                <View style={styles.inputWrapper}>
                   <Hash size={18} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput 
                     style={styles.input}
                     value={re} 
                     onChangeText={setRe} 
                     keyboardType="numeric" 
+                    placeholder="RG Militar"
                   />
                 </View>
               </View>
@@ -177,8 +196,7 @@ export default function ProfilePage() {
                       style={[styles.input, { paddingLeft: 12 }]} 
                       value={posto} 
                       onChangeText={setPosto}
-                      placeholder="Posto"
-                      numberOfLines={1}
+                      placeholder="Ex: Sd. QP PM"
                     />
                   </View>
                 </View>
@@ -190,7 +208,7 @@ export default function ProfilePage() {
                       style={[styles.input, { paddingLeft: 12 }]} 
                       value={setor} 
                       onChangeText={setSetor} 
-                      placeholder="Setor"
+                      placeholder="Ex: P3"
                     />
                   </View>
                 </View>
@@ -220,7 +238,13 @@ export default function ProfilePage() {
                 <Text style={styles.label}>E-MAIL INSTITUCIONAL</Text>
                 <View style={styles.inputWrapper}>
                   <Mail size={18} color="#94a3b8" style={styles.inputIcon} />
-                  <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+                  <TextInput 
+                    style={styles.input} 
+                    value={email} 
+                    onChangeText={setEmail} 
+                    keyboardType="email-address" 
+                    autoCapitalize="none" 
+                  />
                 </View>
               </View>
 
@@ -228,7 +252,13 @@ export default function ProfilePage() {
                 <Text style={styles.label}>TELEFONE / WHATSAPP</Text>
                 <View style={styles.inputWrapper}>
                   <Phone size={18} color="#94a3b8" style={styles.inputIcon} />
-                  <TextInput style={styles.input} value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
+                  <TextInput 
+                    style={styles.input} 
+                    value={telefone} 
+                    onChangeText={setTelefone} 
+                    keyboardType="phone-pad" 
+                    placeholder="(00) 00000-0000"
+                  />
                 </View>
               </View>
             </View>

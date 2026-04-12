@@ -22,7 +22,7 @@ import {
   Activity
 } from 'lucide-react-native';
 
-// --- IMPORTAÇÕES DO AUTH QUE VOCÊ CRIOU ---
+// --- IMPORTAÇÕES DO AUTH ---
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -39,7 +39,6 @@ SplashScreen.preventAutoHideAsync();
 function CustomDrawerContent(props: any) {
   const router = useRouter();
   const pathname = usePathname(); 
-  // Puxamos a função de sair do seu contexto
   const { signOut } = useAuth();
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path);
@@ -126,10 +125,9 @@ function CustomDrawerContent(props: any) {
               style={[styles.drawerItemStyle, isActive('/perfil/perfil') && styles.itemActiveBackground]}
             />
 
-            {/* BOTÃO SAIR CONECTADO AO AUTHCONTEXT */}
             <TouchableOpacity 
               style={styles.logoutButtonInline} 
-              onPress={() => signOut()} // Usa a função signOut que limpa o storage
+              onPress={() => signOut()} 
               activeOpacity={0.8}
             >
               <Power size={18} color="#fff" />
@@ -142,7 +140,6 @@ function CustomDrawerContent(props: any) {
   );
 }
 
-// O ROOTLAYOUT É O PAI DE TUDO, AQUI ENTRA O AUTHPROVIDER
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -156,7 +153,6 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {/* O PROVIDER ENVOLVE TODA A NAVEGAÇÃO */}
       <AuthProvider>
         <RootLayoutNav />
       </AuthProvider>
@@ -166,6 +162,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { user } = useAuth();
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -180,19 +177,12 @@ function RootLayoutNav() {
       >
         <Drawer.Screen 
           name="splash" 
-          options={{ 
-            drawerItemStyle: { display: 'none' }, 
-            swipeEnabled: false, 
-            headerShown: false 
-          }} 
+          options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false, headerShown: false }} 
         />
 
         <Drawer.Screen 
           name="index" 
-          options={{ 
-            drawerItemStyle: { display: 'none' }, 
-            swipeEnabled: false 
-          }} 
+          options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }} 
         />
         
         <Drawer.Screen 
@@ -205,7 +195,7 @@ function RootLayoutNav() {
             headerTitleStyle: { fontWeight: '900', fontSize: 16 },
             headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 },
             headerRight: () => (
-              <View style={[styles.badgeNivel, { borderColor: 'rgba(16, 185, 129, 0.3)', backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+              <View style={[styles.badgeLive, { borderColor: 'rgba(16, 185, 129, 0.3)', backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
                 <Activity size={12} color="#10b981" />
                 <Text style={[styles.badgeText, { color: '#10b981' }]}>LIVE</Text>
               </View>
@@ -267,12 +257,27 @@ function RootLayoutNav() {
             headerTintColor: '#fff',
             headerTitleStyle: { fontWeight: '900', fontSize: 16 },
             headerStyle: { backgroundColor: '#020617', elevation: 0, shadowOpacity: 0 },
-            headerRight: () => (
-              <View style={styles.badgeNivel}>
-                <Shield size={12} color="#3b82f6" />
-                <Text style={styles.badgeText}>OPERADOR</Text>
-              </View>
-            ),
+            headerRight: () => {
+              // Inversão de Cores: Admin = Azul | Outros (Operador) = Laranja
+              const isAdmin = user?.nivel === 'Admin';
+              return (
+                <View style={[
+                  styles.badgeNivel,
+                  { 
+                    borderColor: isAdmin ? 'rgba(59, 130, 246, 0.3)' : 'rgba(245, 158, 11, 0.3)', 
+                    backgroundColor: isAdmin ? 'rgba(59, 130, 246, 0.15)' : 'rgba(245, 158, 11, 0.15)' 
+                  }
+                ]}>
+                  <Shield size={12} color={isAdmin ? "#3b82f6" : "#F59E0B"} />
+                  <Text style={[
+                    styles.badgeText,
+                    { color: isAdmin ? '#3b82f6' : '#F59E0B' }
+                  ]}>
+                    {user?.nivel ? user.nivel.toUpperCase() : 'OPERADOR'}
+                  </Text>
+                </View>
+              );
+            },
           }} 
         />
       </Drawer>
@@ -307,17 +312,25 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(59, 130, 246, 0.3)'
   },
   logoutText: { color: '#fff', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 },
-  badgeNivel: { 
+  badgeLive: { 
     flexDirection: 'row', 
     alignItems: 'center', 
     gap: 5,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)', 
     paddingHorizontal: 10, 
     paddingVertical: 5, 
     borderRadius: 8, 
     marginRight: 15,
     borderWidth: 1, 
-    borderColor: 'rgba(59, 130, 246, 0.3)' 
   },
-  badgeText: { fontSize: 10, fontWeight: '800', color: '#3B82F6', textTransform: 'uppercase' },
+  badgeNivel: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 5,
+    paddingHorizontal: 10, 
+    paddingVertical: 5, 
+    borderRadius: 8, 
+    marginRight: 15,
+    borderWidth: 1, 
+  },
+  badgeText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
 });

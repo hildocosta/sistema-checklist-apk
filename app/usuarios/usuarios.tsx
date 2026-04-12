@@ -15,17 +15,24 @@ import CustomModal from "../../components/CustomModal";
 import api from "../../service/api";
 import { styles } from "./styles";
 
+// --- IMPORTAÇÃO DO CONTEXTO DE AUTENTICAÇÃO ---
+import { useAuth } from "../../context/AuthContext";
+
 interface Usuario {
   id: string;
   name: string;
   posto: string;
   re: string;
   email: string;
-  nivel: string;
+  nivel: 'Admin' | 'Operador';
   image?: string;
 }
 
 export default function UsuariosScreen() {
+  // Dados do Contexto Global
+  const { user: loggedUser, setUser } = useAuth();
+
+  // Estados Locais
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
@@ -39,6 +46,7 @@ export default function UsuariosScreen() {
   const [userSelected, setUserSelected] = useState<Usuario | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Busca inicial de usuários
   const fetchUsers = useCallback(async () => {
     try {
       const response = await api.get("/mobile/users");
@@ -73,18 +81,32 @@ export default function UsuariosScreen() {
     setIsDeleteModalOpen(true);
   };
 
+  // --- FUNÇÃO DE ATUALIZAÇÃO AJUSTADA ---
   const handleUpdateUser = async () => {
     if (!userSelected) return;
     setIsSaving(true);
 
     try {
+      // 1. Atualiza na API
       await api.put(`/mobile/users/${userSelected.id}`, {
         name: userSelected.name,
         posto: userSelected.posto,
         nivel: userSelected.nivel
       });
       
+      // 2. Atualiza a lista local na tela
       setUsuarios(prev => prev.map(u => u.id === userSelected.id ? { ...u, ...userSelected } : u));
+      
+      // 3. SE FOR O USUÁRIO LOGADO, ATUALIZA O CONTEXTO GLOBAL (DRAWER)
+      if (loggedUser && userSelected.id === loggedUser.id) {
+        setUser({
+          ...loggedUser,
+          name: userSelected.name,
+          posto: userSelected.posto,
+          nivel: userSelected.nivel
+        });
+      }
+
       setIsEditModalOpen(false);
       
       setTimeout(() => {
@@ -182,7 +204,6 @@ export default function UsuariosScreen() {
         </SafeAreaView>
       </View>
 
-      {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <ShieldCheck size={20} color="#3B82F6" />
@@ -231,7 +252,6 @@ export default function UsuariosScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3B82F6" />}
       />
 
-      {/* MODAL DE EDIÇÃO */}
       <CustomModal
         isVisible={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -265,7 +285,7 @@ export default function UsuariosScreen() {
           {['Admin', 'Operador'].map((lvl) => (
             <TouchableOpacity 
               key={lvl} 
-              onPress={() => setUserSelected(p => p ? {...p, nivel: lvl} : null)} 
+              onPress={() => setUserSelected(p => p ? {...p, nivel: lvl as any} : null)} 
               style={[styles.levelOption, userSelected?.nivel === lvl && styles.levelOptionActive]}
             >
               <Text style={[styles.levelText, userSelected?.nivel === lvl && styles.levelTextActive]}>{lvl}</Text>
@@ -274,7 +294,6 @@ export default function UsuariosScreen() {
         </View>
       </CustomModal>
 
-      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <CustomModal
         isVisible={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
@@ -307,7 +326,6 @@ export default function UsuariosScreen() {
         </View>
       </CustomModal>
 
-      {/* MODAL DE FEEDBACK (CORES ESCURAS PADRÃO) */}
       <CustomModal
         isVisible={isFeedbackModalOpen}
         onClose={() => setIsFeedbackModalOpen(false)}

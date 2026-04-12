@@ -7,7 +7,7 @@ import {
 } from "react-native";
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, Search, PackageCheck, Send, AlertCircle, CloudUpload } from 'lucide-react-native';
+import { ChevronRight, Search, PackageCheck, AlertCircle, CloudUpload } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -18,12 +18,11 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../service/api"; 
 import { styles } from "./styles";
 
-// Componente de Overlay para evitar a "tela inerte"
 const ProcessingOverlay = ({ visible, message }: { visible: boolean, message: string }) => (
   <Modal transparent visible={visible} animationType="fade">
     <View style={{
       flex: 1, 
-      backgroundColor: 'rgba(2, 6, 23, 0.85)', 
+      backgroundColor: 'rgba(2, 6, 23, 0.90)', 
       justifyContent: 'center', 
       alignItems: 'center'
     }}>
@@ -34,8 +33,7 @@ const ProcessingOverlay = ({ visible, message }: { visible: boolean, message: st
           marginTop: 20, 
           fontSize: 16, 
           fontWeight: '600',
-          textAlign: 'center',
-          letterSpacing: 0.5
+          textAlign: 'center'
         }}>
           {message}
         </Text>
@@ -57,10 +55,9 @@ export default function ChecklistRefinado() {
   const [filtroTexto, setFiltroTexto] = useState("");
   const [itemSaindo, setItemSaindo] = useState<number | null>(null);
   
-  // Estados de controle de envio refinados
   const [statusEnvio, setStatusEnvio] = useState({
     processando: false,
-    mensagem: "Iniciando..."
+    mensagem: ""
   });
   
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -149,16 +146,17 @@ export default function ChecklistRefinado() {
       if (itensDaCat.length === 0) return '';
       return `
         <div class="category-block">
-          <div class="category-header">${cat.label} (${itensDaCat.length} ITENS)</div>
+          <div class="category-header">${cat.label}</div>
           <table class="main-table">
             <thead>
               <tr>
-                <th style="width: 35px;">ORD</th>
-                <th style="width: 40px;">QTD</th>
+                <th style="width: 30px;">ORD</th>
+                <th style="width: 35px;">QTD</th>
                 <th style="text-align: left;">ESPECIFICAÇÃO / SÉRIE</th>
-                <th style="width: 80px;">PMPR</th>
-                <th style="width: 120px;">OBS / CAUTELA</th>
-                <th style="width: 45px;">CONF.</th>
+                <th style="width: 75px;">PMPR</th>
+                <th style="width: 110px;">OBS / CAUTELA</th>
+                <th style="width: 35px;">PÁG</th>
+                <th style="width: 40px;">CONF.</th>
               </tr>
             </thead>
             <tbody>
@@ -173,8 +171,8 @@ export default function ChecklistRefinado() {
                   <td style="text-align: center;">${item.pmpr && item.pmpr !== '----' ? item.pmpr : '---'}</td>
                   <td style="text-transform: uppercase; font-size: 7px;">
                     ${item.cautela ? `<strong>${item.cautela}</strong>` : 'DISPONÍVEL'}
-                    ${item.pagLivro ? `<br/>LIVRO PÁG: ${item.pagLivro}` : ''}
                   </td>
+                  <td style="text-align: center; font-weight: bold;">${item.pagLivro || '---'}</td>
                   <td class="conf-ok">OK</td>
                 </tr>
               `).join('')}
@@ -186,28 +184,28 @@ export default function ChecklistRefinado() {
 
     return `<html><head><style>
       @page { margin: 30px; size: A4; }
-      body { font-family: 'Helvetica', sans-serif; color: #000; line-height: 1.2; padding: 0; margin: 0; }
-      .header-container { text-align: center; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      body { font-family: 'Helvetica', sans-serif; color: #000; line-height: 1.1; padding: 0; margin: 0; }
+      .header-container { text-align: center; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 8px; }
       .header-pmpr { font-size: 10px; font-weight: bold; text-transform: uppercase; }
-      .doc-title { font-size: 13px; font-weight: bold; margin: 8px 0; text-transform: uppercase; background-color: #eee; padding: 5px; border: 1px solid #000; }
-      .info-box { font-size: 9px; border: 1px solid #000; padding: 6px; margin-bottom: 15px; background-color: #fafafa; }
-      .category-block { page-break-inside: avoid; margin-bottom: 15px; }
-      .category-header { background-color: #f1f5f9; padding: 4px; border: 1px solid #000; border-bottom: none; font-weight: bold; font-size: 9px; }
+      .doc-title { font-size: 12px; font-weight: bold; margin: 5px 0; text-transform: uppercase; background-color: #eee; padding: 5px; border: 1px solid #000; }
+      .info-box { font-size: 9px; border: 1px solid #000; padding: 6px; margin-bottom: 12px; background-color: #fafafa; }
+      .category-block { page-break-inside: avoid; margin-bottom: 12px; }
+      .category-header { background-color: #f1f5f9; padding: 4px; border: 1px solid #000; border-bottom: none; font-weight: bold; font-size: 9px; text-transform: uppercase; }
       .main-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-      .main-table th { background-color: #0f172a; color: #ffffff; border: 1px solid #000; padding: 4px; font-size: 8px; }
-      .main-table td { border: 1px solid #000; padding: 4px; font-size: 8px; word-wrap: break-word; vertical-align: middle; }
+      .main-table th { background-color: #0f172a; color: #ffffff; border: 1px solid #000; padding: 4px; font-size: 7.5px; }
+      .main-table td { border: 1px solid #000; padding: 4px; font-size: 7.5px; word-wrap: break-word; vertical-align: middle; }
       .item-desc { font-weight: bold; text-transform: uppercase; }
-      .item-sn { font-size: 7px; color: #444; }
+      .item-sn { font-size: 6.5px; color: #444; }
       .conf-ok { text-align: center; font-weight: bold; color: #059669; }
-      .footer-table { width: 100%; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; }
+      .footer-table { width: 100%; margin-top: 25px; border-top: 1px solid #ccc; padding-top: 10px; }
       .signature-side { text-align: center; font-size: 9px; }
       .qrcode-container { text-align: center; display: flex; flex-direction: column; align-items: center; }
-      .qrcode-img { width: 85px; height: 85px; }
+      .qrcode-img { width: 80px; height: 80px; }
       .qrcode-label { font-size: 6px; font-weight: bold; margin-top: 2px; color: #444; }
     </style></head><body>
-      <div style="text-align: right; font-size: 8px; margin-bottom: 5px;">Gerado em: ${dataFormatada} às ${horaFormatada.substring(0,5)}</div>
+      <div style="text-align: right; font-size: 8px; margin-bottom: 5px;">Relatório gerado em: ${dataFormatada} às ${horaFormatada.substring(0,5)}</div>
       <div class="header-container">
-          <div class="header-pmpr">
+        <div class="header-pmpr">
           POLÍCIA MILITAR DO PARANÁ<br/>6º CRPM | 17º BPM<br/>ALMOXARIFADO
         </div>
         <div class="doc-title">RELATÓRIO DIÁRIO DE CONFERÊNCIA DE CARGA</div>
@@ -220,12 +218,14 @@ export default function ChecklistRefinado() {
       <table class="footer-table">
         <tr>
           <td class="signature-side" style="width: 70%;">
-            <div style="border-top: 1px solid #000; width: 250px; margin: 30px auto 5px auto;"></div>
-            <strong>Assinatura Digital</strong><br/>ID: ${hashUnico}
+            <div style="border-top: 1px solid #000; width: 250px; margin: 40px auto 5px auto;"></div>
+            <strong>${user?.posto || ''} ${user?.name || 'MILITAR'}</strong><br/>
+            Assinatura Digital - ID: ${hashUnico}
           </td>
           <td style="width: 30%;">
             <div class="qrcode-container">
               ${qrCodeBase64 ? `<img src="${qrCodeBase64}" class="qrcode-img" />` : ''}
+              <div class="qrcode-label">VALIDAÇÃO AUTÊNTICA</div>
             </div>
           </td>
         </tr>
@@ -233,10 +233,8 @@ export default function ChecklistRefinado() {
     </body></html>`;
   };
 
-  // Função Senior de Execução de Envio
   const executarEnvioServidor = async (uri: string, base64: string, dataF: string, horaF: string, hashU: string) => {
     setStatusEnvio({ processando: true, mensagem: "Sincronizando com o Servidor..." });
-    
     try {
       const payload = {
         pdfBase64: `data:application/pdf;base64,${base64}`,
@@ -249,34 +247,33 @@ export default function ChecklistRefinado() {
       };
 
       const res = await api.post("/mobile/conferencia", payload);
-      
-      setStatusEnvio({ processando: false, mensagem: "" }); // Remove overlay antes do alert
+      setStatusEnvio({ processando: false, mensagem: "" });
 
       if (res.status === 201 || res.status === 200) {
-        Alert.alert("Sucesso", "Relatório enviado ao sistema com sucesso!", [
+        Alert.alert("Sucesso", "Conferência finalizada e enviada com sucesso!", [
           { text: "OK", onPress: () => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'dashboard/dashboard' }] })) }
         ]);
       }
     } catch (err) {
       setStatusEnvio({ processando: false, mensagem: "" });
-      Alert.alert("Erro no Envio", "Não foi possível conectar ao servidor. O PDF foi salvo localmente.");
+      Alert.alert("Aviso de Conexão", "Não foi possível enviar ao servidor. O PDF foi aberto para salvamento manual.");
     }
   };
 
   const finalizarEEnviar = async () => {
     if (progresso < 100) {
-      Alert.alert("Atenção", "Conclua a conferência de todos os itens.");
+      Alert.alert("Pendente", `Ainda restam ${itensFaltantes} itens para conferir.`);
       return;
     }
 
     Alert.alert(
       "Finalizar Conferência", 
-      "Como deseja proceder com o relatório gerado?",
+      "Deseja gerar o relatório assinado agora?",
       [
         { 
-          text: "Visualizar e Compartilhar", 
+          text: "Visualizar PDF", 
           onPress: async () => {
-            setStatusEnvio({ processando: true, mensagem: "Gerando PDF assinado..." });
+            setStatusEnvio({ processando: true, mensagem: "Gerando PDF..." });
             try {
               const agora = new Date();
               const hash = `CHECK-${user?.re}-${Date.now()}`;
@@ -289,27 +286,26 @@ export default function ChecklistRefinado() {
           }
         },
         { 
-          text: "Enviar para o Sistema", 
+          text: "Enviar ao Sistema", 
           onPress: async () => {
-            setStatusEnvio({ processando: true, mensagem: "Preparando Documentação..." });
+            setStatusEnvio({ processando: true, mensagem: "Preparando envio..." });
             try {
               const agora = new Date();
               const dF = agora.toLocaleDateString('pt-BR');
               const hF = agora.toLocaleTimeString('pt-BR');
               const hash = `CHECK-${user?.re}-${Date.now()}`;
               
-              setStatusEnvio({ processando: true, mensagem: "Gerando Assinatura Digital..." });
+              setStatusEnvio({ processando: true, mensagem: "Gerando Assinatura..." });
               const qr = await getQRCodeBase64(hash);
               
-              setStatusEnvio({ processando: true, mensagem: "Renderizando Relatório..." });
+              setStatusEnvio({ processando: true, mensagem: "Renderizando..." });
               const html = gerarHTMLParaPDF(dF, hF, hash, qr || "");
               const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
               
-              // Chama a função de upload
               await executarEnvioServidor(uri, base64 || "", dF, hF, hash);
             } catch (e) {
               setStatusEnvio({ processando: false, mensagem: "" });
-              Alert.alert("Erro", "Falha ao processar arquivo.");
+              Alert.alert("Erro", "Falha ao processar relatório.");
             }
           }
         },
@@ -324,7 +320,6 @@ export default function ChecklistRefinado() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#020617" />
       
-      {/* Overlay de Processamento */}
       <ProcessingOverlay 
         visible={statusEnvio.processando} 
         message={statusEnvio.mensagem} 
@@ -379,7 +374,7 @@ export default function ChecklistRefinado() {
         <View style={styles.searchContainer}>
           <Search size={20} color="#94a3b8" style={styles.searchIcon} />
           <TextInput
-            placeholder="Buscar Descrição, PMPR ou Série..."
+            placeholder="Buscar..."
             style={styles.searchInput}
             value={filtroTexto}
             onChangeText={setFiltroTexto}
@@ -456,7 +451,7 @@ export default function ChecklistRefinado() {
           disabled={statusEnvio.processando}
           style={[
             styles.sendButton, 
-            progresso < 100 && { backgroundColor: '#334155', opacity: 1 } 
+            progresso < 100 && { backgroundColor: '#334155' } 
           ]}
           onPress={finalizarEEnviar}
         >
